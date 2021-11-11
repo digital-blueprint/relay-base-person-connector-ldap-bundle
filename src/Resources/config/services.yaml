@@ -1,0 +1,10 @@
+services:
+  Dbp\Relay\LdapPersonProviderBundle\Service\:
+    autowire: true
+    autoconfigure: true
+
+  Dbp\Relay\BasePersonBundle\API\PersonProviderInterface:
+    '@Dbp\Relay\LdapPersonProviderBundle\Service\LDAPPersonProvider'
+
+  Dbp\Relay\AuthBundle\API\UserRolesInterface:
+    '@Dbp\Relay\LdapPersonProviderBundle\Service\CustomUserRoles'
