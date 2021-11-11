@@ -1,6 +1,6 @@
 # DbpRelayLdapPersonProviderBundle
 
-[GitLab](https://gitlab.tugraz.at/dbp/campus-online/dbp-relay-ldap-person-provider-bundle) | [Packagist](https://packagist.org/packages/dbp/relay-ldap-person-provider-bundle)
+[GitLab](https://gitlab.tugraz.at/dbp/relay/dbp-relay-ldap-person-provider-bundle) | [Packagist](https://packagist.org/packages/dbp/relay-ldap-person-provider-bundle)
 
 This Symfony bundle contains LDAPPersonProvider services for the DBP Relay project.
 
