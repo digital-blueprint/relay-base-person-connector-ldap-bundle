@@ -13,13 +13,35 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder('dbp_relay_ldap_person_provider');
 
-        $treeBuilder->getRootNode()
+        $cacheBuilder = new TreeBuilder('cache');
+        $cacheNode = $cacheBuilder->getRootNode()
             ->children()
-            ->scalarNode('co_oauth2_ucardapi_client_id')->end()
-            ->scalarNode('co_oauth2_ucardapi_client_secret')->end()
-            ->scalarNode('co_oauth2_ucardapi_api_url')->end()
-            ->end()
+            ->scalarNode('person_cache_path')->end()
+            ->scalarNode('ldap_cache_path')->end()
             ->end();
+        $treeBuilder->getRootNode()->append($cacheNode);
+
+        $ldapBuilder = new TreeBuilder('ldap');
+        $ldapNode = $ldapBuilder->getRootNode()
+            ->children()
+            ->scalarNode('host')->end()
+            ->scalarNode('base_dn')->end()
+            ->scalarNode('username')->end()
+            ->scalarNode('password')->end()
+            ->end();
+
+        $attributesBuilder = new TreeBuilder('attributes');
+        $attributesNode = $attributesBuilder->getRootNode()
+            ->children()
+            ->scalarNode('identifier')->end()
+            ->scalarNode('given_name')->end()
+            ->scalarNode('family_name')->end()
+            ->scalarNode('email')->end()
+            ->scalarNode('birthday')->end()
+            ->end();
+        $ldapNode->append($attributesNode);
+
+        $treeBuilder->getRootNode()->append($ldapNode);
 
         return $treeBuilder;
     }

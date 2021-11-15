@@ -76,24 +76,24 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->cacheTTL = 0;
         $this->currentPerson = null;
         $this->params = $params;
-        $this->providerConfig = [
-            'hosts' => [$this->params->get('app.ldap.host') ?? ''],
-            'base_dn' => $this->params->get('app.ldap.base_dn') ?? '',
-            'username' => $this->params->get('app.ldap.username') ?? '',
-            'password' => $this->params->get('app.ldap.password') ?? '',
-            'use_tls' => true,
-        ];
+//        $this->providerConfig = [
+//            'hosts' => [$this->params->get('app.ldap.host') ?? ''],
+//            'base_dn' => $this->params->get('app.ldap.base_dn') ?? '',
+//            'username' => $this->params->get('app.ldap.username') ?? '',
+//            'password' => $this->params->get('app.ldap.password') ?? '',
+//            'use_tls' => true,
+//        ];
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
 
-        $this->setPersonCache(new FilesystemAdapter('app-core-auth-person', 60, (string) $this->params->get('app.cache.person-cache-path')));
-        $this->setLDAPCache(new FilesystemAdapter('app-core-ldap', 360, (string) $this->params->get('app.cache.ldap-cache-path')), 360);
+//        $this->setPersonCache(new FilesystemAdapter('app-core-auth-person', 60, (string) $this->params->get('app.cache.person-cache-path')));
+//        $this->setLDAPCache(new FilesystemAdapter('app-core-ldap', 360, (string) $this->params->get('app.cache.ldap-cache-path')), 360);
 
-        $this->identifierAttributeName = $this->params->get('app.ldap.attributes.identifier') ?? 'cn';
-        $this->givenNameAttributeName = $this->params->get('app.ldap.attributes.given_name') ?? 'givenName';
-        $this->familyNameAttributeName = $this->params->get('app.ldap.attributes.family_name') ?? 'sn';
-        $this->emailAttributeName = $this->params->get('app.ldap.attributes.email') ?? '';
-        $this->birthdayAttributeName = $this->params->get('app.ldap.attributes.birthday') ?? '';
+//        $this->identifierAttributeName = $this->params->get('app.ldap.attributes.identifier') ?? 'cn';
+//        $this->givenNameAttributeName = $this->params->get('app.ldap.attributes.given_name') ?? 'givenName';
+//        $this->familyNameAttributeName = $this->params->get('app.ldap.attributes.family_name') ?? 'sn';
+//        $this->emailAttributeName = $this->params->get('app.ldap.attributes.email') ?? '';
+//        $this->birthdayAttributeName = $this->params->get('app.ldap.attributes.birthday') ?? '';
     }
 
     public function setConfig(array $config)
