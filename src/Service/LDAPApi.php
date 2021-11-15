@@ -96,6 +96,17 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->birthdayAttributeName = $this->params->get('app.ldap.attributes.birthday') ?? '';
     }
 
+    public function setConfig(array $config)
+    {
+        $this->providerConfig = [
+            'hosts' => [$config['host'] ?? ''],
+            'base_dn' => $config['base_dn'] ?? '',
+            'username' => $config['username'] ?? '',
+            'password' => $config['password'] ?? '',
+            'use_tls' => true,
+        ];
+    }
+
     public function setDeploymentEnvironment(string $env)
     {
         $this->deploymentEnv = $env;

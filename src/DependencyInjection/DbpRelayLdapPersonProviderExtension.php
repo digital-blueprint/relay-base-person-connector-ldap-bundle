@@ -20,7 +20,7 @@ class DbpRelayLdapPersonProviderExtension extends ConfigurableExtension
         $loader->load('services.yaml');
 
         // Inject the config value into the UCardService service
-        $definition = $container->getDefinition('Dbp\Relay\LdapPersonProviderBundle\Service\UCardService');
+        $definition = $container->getDefinition('Dbp\Relay\LdapPersonProviderBundle\Service\LDAPApi');
         $definition->addMethodCall('setConfig', [$mergedConfig]);
     }
 
