@@ -1,5 +1,6 @@
 services:
   Dbp\Relay\LdapPersonProviderBundle\Service\:
+    resource: '../../Service'
     autowire: true
     autoconfigure: true
 
