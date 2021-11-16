@@ -21,12 +21,12 @@ class DbpRelayLdapPersonProviderExtension extends ConfigurableExtension
         $loader->load('services.yaml');
 
         $ldapCache = $container->register('dbp_api.cache.ldap_person_provider.ldap', FilesystemAdapter::class);
-        $ldapCache->setArguments(['core-ldap', 360, '%kernel.cache_dir%/dbp/ldap-person-provider-ldap']);
+        $ldapCache->setArguments(['core-ldap', 360, $mergedConfig['cache']['person_cache_path']]);
         $ldapCache->setPublic(true);
         $ldapCache->addTag('cache.pool');
 
         $personCacheDef = $container->register('dbp_api.cache.ldap_person_provider.auth_person', FilesystemAdapter::class);
-        $personCacheDef->setArguments(['core-auth-person', 60, '%kernel.cache_dir%/dbp/ldap-person-provider-auth-person']);
+        $personCacheDef->setArguments(['core-auth-person', 60, $mergedConfig['cache']['ldap_cache_path']]);
         $personCacheDef->addTag('cache.pool');
 
         // Inject the config value into the UCardService service
