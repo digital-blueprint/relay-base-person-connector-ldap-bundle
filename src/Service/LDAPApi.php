@@ -98,11 +98,17 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public function setConfig(array $config)
     {
+        $this->identifierAttributeName = $config['ldap']['attributes']['identifier'] ?? 'cn';
+        $this->givenNameAttributeName = $config['ldap']['attributes']['given_name'] ?? 'givenName';
+        $this->familyNameAttributeName = $config['ldap']['attributes']['family_name'] ?? 'sn';
+        $this->emailAttributeName = $config['ldap']['attributes']['email'] ?? '';
+        $this->birthdayAttributeName = $config['ldap']['attributes']['birthday'] ?? '';
+
         $this->providerConfig = [
-            'hosts' => [$config['host'] ?? ''],
-            'base_dn' => $config['base_dn'] ?? '',
-            'username' => $config['username'] ?? '',
-            'password' => $config['password'] ?? '',
+            'hosts' => [$config['ldap']['host'] ?? ''],
+            'base_dn' => $config['ldap']['base_dn'] ?? '',
+            'username' => $config['ldap']['username'] ?? '',
+            'password' => $config['ldap']['password'] ?? '',
             'use_tls' => true,
         ];
     }
@@ -275,7 +281,8 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $roles = ['ROLE_SCOPE_GREENLIGHT'];
         $person->setExtraData('ldap-roles', $roles);
 
-        $campusOnlineIdentifierAttribute = (string) $this->params->get('app.ldap.attributes.campusonline_identifier') ?? '';
+        // TODO: Allow injection of this setting
+        $campusOnlineIdentifierAttribute = (string) $this->params->get('app.campusonline.person.identifier') ?? '';
 
         // Used in \Dbp\Relay\LdapPersonProviderBundle\Service\CampusonlinePersonPhotoProvider::getPhotoData
         if ($campusOnlineIdentifierAttribute !== '' && $user->hasAttribute($campusOnlineIdentifierAttribute)) {
