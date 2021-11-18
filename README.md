@@ -32,10 +32,17 @@ For this create `config/packages/dbp_relay_base_person_connector_ldap.yaml` in t
 content:
 
 ```yaml
-dbp_relay_base_person_connector_ldap:
-  co_oauth2_ucardapi_api_url:
-  co_oauth2_ucardapi_client_id:
-  co_oauth2_ucardapi_client_secret:
+  ldap:
+    host: '%env(LDAP_PERSON_PROVIDER_LDAP_HOST)%'
+    base_dn: '%env(LDAP_PERSON_PROVIDER_LDAP_BASE_DN)%'
+    username: '%env(LDAP_PERSON_PROVIDER_LDAP_USERNAME)%'
+    password: '%env(LDAP_PERSON_PROVIDER_LDAP_PASSWORD)%'
+    attributes:
+      identifier: '%env(LDAP_PERSON_PROVIDER_LDAP_ATTRIBUTE_IDENTIFIER)%'
+      given_name: '%env(LDAP_PERSON_PROVIDER_LDAP_ATTRIBUTE_GIVEN_NAME)%'
+      family_name: '%env(LDAP_PERSON_PROVIDER_LDAP_ATTRIBUTE_FAMILY_NAME)%'
+      email: '%env(LDAP_PERSON_PROVIDER_LDAP_ATTRIBUTE_EMAIL)%'
+      birthday: '%env(LDAP_PERSON_PROVIDER_LDAP_ATTRIBUTE_BIRTHDAY)%'
 ```
 
 The value gets read in `DbpRelayBasePersonConnectorLdapExtension` and passed when creating the
