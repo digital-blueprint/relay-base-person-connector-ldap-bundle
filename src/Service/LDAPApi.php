@@ -58,8 +58,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     private $locator;
 
-    private $params;
-
     private $identifierAttributeName;
 
     private $givenNameAttributeName;
@@ -72,12 +70,11 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     private $ldapApiProvider;
 
-    public function __construct(ContainerInterface $locator, ParameterBagInterface $params, LDAPApiProviderInterface $ldapApiProvider)
+    public function __construct(ContainerInterface $locator, LDAPApiProviderInterface $ldapApiProvider)
     {
         $this->ad = new Adldap();
         $this->cacheTTL = 0;
         $this->currentPerson = null;
-        $this->params = $params;
         $this->ldapApiProvider = $ldapApiProvider;
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
@@ -259,7 +256,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         if ($birthDateString !== '') {
             $matches = [];
 
-            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $birthDateString, $matches)) {
+            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $birthDateString, $matches)) {
                 $person->setBirthDate("{$matches[1]}-{$matches[2]}-{$matches[3]}");
             }
         }
