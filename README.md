@@ -8,7 +8,9 @@ This Symfony bundle contains BasePersonConnectorLdap services for the DBP Relay 
 
 * Add the bundle package as a dependency:
 
-```
+```bash
+# You may want to first add the DBP Symfony recipe repository to your application to get the configuration file installed automatically
+# See: https://github.com/digital-blueprint/symfony-recipes
 composer require dbp/relay-base-person-connector-ldap-bundle
 ```
 
@@ -45,9 +47,6 @@ dbp_relay_base_person_connector_ldap:
       email: '%env(LDAP_PERSON_PROVIDER_LDAP_ATTRIBUTE_EMAIL)%'
       birthday: '%env(LDAP_PERSON_PROVIDER_LDAP_ATTRIBUTE_BIRTHDAY)%'
 ```
-
-The value gets read in `DbpRelayBasePersonConnectorLdapExtension` and passed when creating the
-`UCardService` service.
 
 For more info on bundle configuration see
 https://symfony.com/doc/current/bundles/configuration.html
