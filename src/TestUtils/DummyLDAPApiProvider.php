@@ -15,20 +15,11 @@ class DummyLDAPApiProvider implements LDAPApiProviderInterface
      */
     public function personFromUserItemPostHook(array $attributes, Person $person, bool $full = false)
     {
-        // For example, you can parse the date of birth from the LDAP attribute and set it to the person object.
-
-//        $birthDate = $attributes['dateofbirth'][0];
-//        $person->setBirthDate($birthDate);
+        $person->setExtraData('test', 'my-test-string');
     }
 
     public function getPersonForExternalServiceHook(string $service, string $serviceID): Person
     {
-        // For example, you can use the service and serviceID to get the person from some other service.
-
-//        if ($service === 'SOME-SERVICE') {
-//            return getPersonFromSomeService($serviceID);
-//        }
-
         throw new BadRequestHttpException("Unknown service: $service");
     }
 }

@@ -83,4 +83,15 @@ class PersonTest extends ApiTestCase
             $this->assertEquals('1994-06-24', $person->getBirthDate());
         }
     }
+
+    public function testLDAPApiProvider()
+    {
+        $user = new AdldapUser([
+            'cn' => ['foobar'],
+        ], $this->newBuilder());
+
+        $person = $this->api->personFromUserItem($user, false);
+
+        $this->assertEquals($person->getExtraData('test'), 'my-test-string');
+    }
 }
