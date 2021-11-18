@@ -23,7 +23,6 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -267,7 +266,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
         // Remove all value with numeric keys
         $attributes = [];
-        foreach($user->getAttributes() as $key => $value) {
+        foreach ($user->getAttributes() as $key => $value) {
             if (!is_numeric($key)) {
                 $attributes[$key] = $value;
             }

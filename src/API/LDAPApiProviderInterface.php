@@ -10,19 +10,11 @@ interface LDAPApiProviderInterface
 {
     /**
      * Allows manipulation of the person with a hash array of $attributes at the end of "personFromUserItem".
-     *
-     * @param array $attributes
-     * @param Person $person
-     * @param bool $full
      */
     public function personFromUserItemPostHook(array $attributes, Person $person, bool $full = false);
 
     /**
      * Allows to fetch a person for a services by service id.
-     *
-     * @param string $service
-     * @param string $serviceID
-     * @return Person
      */
     public function getPersonForExternalServiceHook(string $service, string $serviceID): Person;
 }

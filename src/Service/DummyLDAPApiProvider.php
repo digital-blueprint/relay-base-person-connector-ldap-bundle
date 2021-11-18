@@ -21,7 +21,8 @@ class DummyLDAPApiProvider implements LDAPApiProviderInterface
 //        $person->setBirthDate($birthDate);
     }
 
-    public function getPersonForExternalServiceHook(string $service, string $serviceID): Person {
+    public function getPersonForExternalServiceHook(string $service, string $serviceID): Person
+    {
         // For example, you can use the service and serviceID to get the person from some other service.
 
 //        if ($service === 'SOME-SERVICE') {
