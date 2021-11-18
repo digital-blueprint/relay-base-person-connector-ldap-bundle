@@ -9,3 +9,6 @@ services:
 
   Dbp\Relay\AuthBundle\API\UserRolesInterface:
     '@Dbp\Relay\LdapPersonProviderBundle\Service\CustomUserRoles'
+
+  Dbp\Relay\LdapPersonProviderBundle\API\LDAPApiProviderInterface:
+    '@Dbp\Relay\LdapPersonProviderBundle\Service\DummyLDAPApiProvider'

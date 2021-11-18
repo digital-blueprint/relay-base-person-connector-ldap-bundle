@@ -18,6 +18,7 @@ use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
+use Dbp\Relay\LdapPersonProviderBundle\API\LDAPApiProviderInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -70,30 +71,17 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     private $birthdayAttributeName;
 
-    public function __construct(ContainerInterface $locator, ParameterBagInterface $params)
+    private $ldapApiProvider;
+
+    public function __construct(ContainerInterface $locator, ParameterBagInterface $params, LDAPApiProviderInterface $ldapApiProvider)
     {
         $this->ad = new Adldap();
         $this->cacheTTL = 0;
         $this->currentPerson = null;
         $this->params = $params;
-//        $this->providerConfig = [
-//            'hosts' => [$this->params->get('app.ldap.host') ?? ''],
-//            'base_dn' => $this->params->get('app.ldap.base_dn') ?? '',
-//            'username' => $this->params->get('app.ldap.username') ?? '',
-//            'password' => $this->params->get('app.ldap.password') ?? '',
-//            'use_tls' => true,
-//        ];
+        $this->ldapApiProvider = $ldapApiProvider;
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
-
-//        $this->setPersonCache(new FilesystemAdapter('app-core-auth-person', 60, (string) $this->params->get('app.cache.person-cache-path')));
-//        $this->setLDAPCache(new FilesystemAdapter('app-core-ldap', 360, (string) $this->params->get('app.cache.ldap-cache-path')), 360);
-
-//        $this->identifierAttributeName = $this->params->get('app.ldap.attributes.identifier') ?? 'cn';
-//        $this->givenNameAttributeName = $this->params->get('app.ldap.attributes.given_name') ?? 'givenName';
-//        $this->familyNameAttributeName = $this->params->get('app.ldap.attributes.family_name') ?? 'sn';
-//        $this->emailAttributeName = $this->params->get('app.ldap.attributes.email') ?? '';
-//        $this->birthdayAttributeName = $this->params->get('app.ldap.attributes.birthday') ?? '';
     }
 
     public function setConfig(array $config)
@@ -277,17 +265,16 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             }
         }
 
-        // TODO: Add code to decide what roles a user has (or just depend on the roles from CustomUserRoles)
-        $roles = ['ROLE_SCOPE_GREENLIGHT'];
-        $person->setExtraData('ldap-roles', $roles);
-
-        // TODO: Allow injection of this setting
-        $campusOnlineIdentifierAttribute = (string) $this->params->get('app.campusonline.person.identifier') ?? '';
-
-        // Used in \Dbp\Relay\LdapPersonProviderBundle\Service\CampusonlinePersonPhotoProvider::getPhotoData
-        if ($campusOnlineIdentifierAttribute !== '' && $user->hasAttribute($campusOnlineIdentifierAttribute)) {
-            $person->setExtraData($campusOnlineIdentifierAttribute, $user->getAttribute($campusOnlineIdentifierAttribute)[0]);
+        // Remove all value with numeric keys
+        $attributes = [];
+        foreach($user->getAttributes() as $key => $value) {
+            if (!is_numeric($key)) {
+                $attributes[$key] = $value;
+            }
         }
+
+        // Call post-processing hook
+        $this->ldapApiProvider->personFromUserItemPostHook($attributes, $person, $full);
 
         return $person;
     }
@@ -326,7 +313,13 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public function getPersonForExternalService(string $service, string $serviceID): Person
     {
-        throw new BadRequestHttpException("Unknown service: $service");
+        $person = $this->ldapApiProvider->getPersonForExternalServiceHook($service, $serviceID);
+
+        if (!$person) {
+            throw new BadRequestHttpException("Unknown service: $service");
+        }
+
+        return $person;
     }
 
     private function getUserSession(): UserSessionInterface
