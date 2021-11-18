@@ -1,5 +1,5 @@
 {
-    "name": "dbp/relay-ldap-person-provider-bundle",
+    "name": "dbp/relay-base-person-connector-ldap-bundle",
     "type": "symfony-bundle",
     "license": "AGPL-3.0-or-later",
     "require": {
@@ -26,12 +26,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Dbp\\Relay\\LdapPersonProviderBundle\\": "src/"
+            "Dbp\\Relay\\BasePersonConnectorLdapBundle\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Dbp\\Relay\\LdapPersonProviderBundle\\Tests\\": "tests/"
+            "Dbp\\Relay\\BasePersonConnectorLdapBundle\\Tests\\": "tests/"
         }
     },
     "config": {

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Dbp\Relay\LdapPersonProviderBundle\Service;
+namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 
 use Dbp\Relay\BasePersonBundle\API\PersonProviderInterface;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 
-class LDAPPersonProvider implements PersonProviderInterface
+class BasePersonConnectorLdap implements PersonProviderInterface
 {
     private $ldapApi;
 

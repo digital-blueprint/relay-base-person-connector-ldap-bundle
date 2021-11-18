@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dbp\Relay\LdapPersonProviderBundle\Service;
+namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 
 use Dbp\Relay\AuthBundle\API\UserRolesInterface;
 

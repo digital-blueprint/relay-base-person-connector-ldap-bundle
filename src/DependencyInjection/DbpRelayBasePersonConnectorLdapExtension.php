@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dbp\Relay\LdapPersonProviderBundle\DependencyInjection;
+namespace Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection;
 
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Config\FileLocator;
@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\ConfigurableExtension;
 
-class DbpRelayLdapPersonProviderExtension extends ConfigurableExtension
+class DbpRelayBasePersonConnectorLdapExtension extends ConfigurableExtension
 {
     public function loadInternal(array $mergedConfig, ContainerBuilder $container)
     {
@@ -30,7 +30,7 @@ class DbpRelayLdapPersonProviderExtension extends ConfigurableExtension
         $personCacheDef->addTag('cache.pool');
 
         // Inject the config value into the UCardService service
-        $definition = $container->getDefinition('Dbp\Relay\LdapPersonProviderBundle\Service\LDAPApi');
+        $definition = $container->getDefinition('Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi');
         $definition->addMethodCall('setConfig', [$mergedConfig]);
         $definition->addMethodCall('setLDAPCache', [$ldapCache, 360]);
         $definition->addMethodCall('setPersonCache', [$personCacheDef]);

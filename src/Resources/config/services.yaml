@@ -1,14 +1,14 @@
 services:
-  Dbp\Relay\LdapPersonProviderBundle\Service\:
+  Dbp\Relay\BasePersonConnectorLdapBundle\Service\:
     resource: '../../Service'
     autowire: true
     autoconfigure: true
 
   Dbp\Relay\BasePersonBundle\API\PersonProviderInterface:
-    '@Dbp\Relay\LdapPersonProviderBundle\Service\LDAPPersonProvider'
+    '@Dbp\Relay\BasePersonConnectorLdapBundle\Service\BasePersonConnectorLdap'
 
   Dbp\Relay\AuthBundle\API\UserRolesInterface:
-    '@Dbp\Relay\LdapPersonProviderBundle\Service\CustomUserRoles'
+    '@Dbp\Relay\BasePersonConnectorLdapBundle\Service\CustomUserRoles'
 
-  Dbp\Relay\LdapPersonProviderBundle\API\LDAPApiProviderInterface:
-    '@Dbp\Relay\LdapPersonProviderBundle\Service\DummyLDAPApiProvider'
+  Dbp\Relay\BasePersonConnectorLdapBundle\API\LDAPApiProviderInterface:
+    '@Dbp\Relay\BasePersonConnectorLdapBundle\Service\DummyLDAPApiProvider'

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Dbp\Relay\LdapPersonProviderBundle\Service;
+namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 
 use Dbp\Relay\BasePersonBundle\Entity\Person;
-use Dbp\Relay\LdapPersonProviderBundle\API\LDAPApiProviderInterface;
+use Dbp\Relay\BasePersonConnectorLdapBundle\API\LDAPApiProviderInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class DummyLDAPApiProvider implements LDAPApiProviderInterface

@@ -7,7 +7,7 @@ declare(strict_types=1);
  * @see https://github.com/Adldap2/Adldap2
  */
 
-namespace Dbp\Relay\LdapPersonProviderBundle\Service;
+namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 
 use Adldap\Adldap;
 use Adldap\Connections\Provider;
@@ -15,10 +15,10 @@ use Adldap\Connections\ProviderInterface;
 use Adldap\Models\User;
 use Adldap\Query\Builder;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
+use Dbp\Relay\BasePersonConnectorLdapBundle\API\LDAPApiProviderInterface;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
-use Dbp\Relay\LdapPersonProviderBundle\API\LDAPApiProviderInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;

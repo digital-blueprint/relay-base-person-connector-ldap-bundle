@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Dbp\Relay\LdapPersonProviderBundle\API;
+namespace Dbp\Relay\BasePersonConnectorLdapBundle\API;
 
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 

@@ -9,9 +9,9 @@ use Adldap\Models\User as AdldapUser;
 use Adldap\Query\Builder;
 use Adldap\Query\Grammar;
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
-use Dbp\Relay\LdapPersonProviderBundle\Service\LDAPApi;
-use Dbp\Relay\LdapPersonProviderBundle\Service\LDAPPersonProvider;
-use Dbp\Relay\LdapPersonProviderBundle\TestUtils\DummyLDAPApiProvider;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Service\BasePersonConnectorLdap;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
+use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\DummyLDAPApiProvider;
 use Mockery;
 
 class PersonTest extends ApiTestCase
@@ -22,7 +22,7 @@ class PersonTest extends ApiTestCase
     private $api;
 
     /**
-     * @var LDAPPersonProvider
+     * @var BasePersonConnectorLdap
      */
     private $provider;
 
@@ -40,7 +40,7 @@ class PersonTest extends ApiTestCase
             ],
         ]);
 
-        $this->provider = new LDAPPersonProvider($this->api);
+        $this->provider = new BasePersonConnectorLdap($this->api);
     }
 
     public function testBasic()
