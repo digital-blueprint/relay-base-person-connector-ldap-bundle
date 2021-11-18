@@ -14,17 +14,8 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder('dbp_relay_ldap_person_provider');
 
-        $cacheBuilder = new TreeBuilder('cache');
-        $cacheNode = $cacheBuilder->getRootNode()
-            ->children()
-            ->scalarNode('person_cache_path')->end()
-            ->scalarNode('ldap_cache_path')->end()
-            ->end();
-
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->getRootNode();
-
-        $rootNode->append($cacheNode);
 
         $ldapBuilder = new TreeBuilder('ldap');
         $ldapNode = $ldapBuilder->getRootNode()
