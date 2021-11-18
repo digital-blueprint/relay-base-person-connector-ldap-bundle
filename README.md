@@ -32,6 +32,7 @@ For this create `config/packages/dbp_relay_base_person_connector_ldap.yaml` in t
 content:
 
 ```yaml
+dbp_relay_base_person_connector_ldap:
   ldap:
     host: '%env(LDAP_PERSON_PROVIDER_LDAP_HOST)%'
     base_dn: '%env(LDAP_PERSON_PROVIDER_LDAP_BASE_DN)%'
