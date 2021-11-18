@@ -229,6 +229,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
                 throw new NotFoundHttpException(sprintf("Person with id '%s' could not be found!", $identifier));
             }
 
+            /* @var User $user */
             return $user;
         } catch (\Adldap\Auth\BindException $e) {
             // There was an issue binding / connecting to the server.
