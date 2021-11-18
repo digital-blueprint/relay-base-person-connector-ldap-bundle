@@ -7,7 +7,7 @@ namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 use Dbp\Relay\BasePersonBundle\API\PersonProviderInterface;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 
-class BasePersonConnectorLdap implements PersonProviderInterface
+class LDAPPersonProvider implements PersonProviderInterface
 {
     private $ldapApi;
 

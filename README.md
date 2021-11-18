@@ -2,7 +2,7 @@
 
 [GitLab](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle) | [Packagist](https://packagist.org/packages/dbp/relay-base-person-connector-ldap-bundle)
 
-This Symfony bundle contains BasePersonConnectorLdap services for the DBP Relay project.
+This Symfony bundle contains LDAPPersonProvider services for the DBP Relay project.
 
 ## Integration into the API Server
 
