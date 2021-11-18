@@ -36,8 +36,8 @@ class PersonTest extends ApiTestCase
                 'attributes' => [
                     'email' => 'email',
                     'birthday' => 'dateofbirth',
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $this->provider = new LDAPPersonProvider($this->api);
