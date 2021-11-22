@@ -29,7 +29,7 @@ DBP\API\CoreBundle\DbpCoreBundle::class => ['all' => true],
 ## Configuration
 
 The bundle has some configuration values that you can specify in your
-app, either by hardcoding it, or by referencing an environment variable.
+app, either by hard-coding it, or by referencing an environment variable.
 
 For this create `config/packages/dbp_relay_base_person_connector_ldap.yaml` in the app with the following
 content:
@@ -51,6 +51,17 @@ dbp_relay_base_person_connector_ldap:
 
 For more info on bundle configuration see
 https://symfony.com/doc/current/bundles/configuration.html
+
+## Customization
+
+You can implement the [LDAPApiProviderInterface](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle/-/blob/main/src/API/LDAPApiProviderInterface.php)
+to customize how attributes are fetched from the LDAP server and assigned to the `Person` entity or what `Person` entities
+are fetched from certain external services like in the [ALMA Bundle](https://gitlab.tugraz.at/dbp/library/api-alma-bundle).
+
+You'll find an example at [DummyLDAPApiProvider.php](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle/-/blob/main/src/Service/DummyLDAPApiProvider.php).
+
+If you don't need any customization, you don't need to implement the interface,
+there is the default implementation which is used by default.
 
 ## Development & Testing
 
