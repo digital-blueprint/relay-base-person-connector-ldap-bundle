@@ -392,11 +392,11 @@
         },
         {
             "name": "dbp/relay-core-bundle",
-            "version": "v0.1.24",
+            "version": "v0.1.26",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-core-bundle",
-                "reference": "c59a52b206ca7fd3ce96fbb1c616a979d1a911c5"
+                "reference": "c0262c7e9771335cfffe5068e0cd4677d29bfe76"
             },
             "require": {
                 "api-platform/core": "^2.6.6",
@@ -452,7 +452,7 @@
             "license": [
                 "AGPL-3.0-or-later"
             ],
-            "time": "2021-11-25T11:23:12+00:00"
+            "time": "2021-12-14T12:59:26+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -1214,16 +1214,16 @@
         },
         {
             "name": "illuminate/contracts",
-            "version": "v8.75.0",
+            "version": "v8.76.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
-                "reference": "b07755f7c456cf587dfbfd6f0854f9f7c1a34b2f"
+                "reference": "9baa9f781071e67d7b171775bd3be7ead13ddd29"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/contracts/zipball/b07755f7c456cf587dfbfd6f0854f9f7c1a34b2f",
-                "reference": "b07755f7c456cf587dfbfd6f0854f9f7c1a34b2f",
+                "url": "https://api.github.com/repos/illuminate/contracts/zipball/9baa9f781071e67d7b171775bd3be7ead13ddd29",
+                "reference": "9baa9f781071e67d7b171775bd3be7ead13ddd29",
                 "shasum": ""
             },
             "require": {
@@ -1258,7 +1258,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2021-12-07T08:18:44+00:00"
+            "time": "2021-12-14T14:40:44+00:00"
         },
         {
             "name": "kevinrob/guzzle-cache-middleware",
@@ -6354,16 +6354,16 @@
         },
         {
             "name": "tightenco/collect",
-            "version": "v8.75.0",
+            "version": "v8.76.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tighten/collect.git",
-                "reference": "d05d932b9f066b2de4601fb17f72aab69b7d1c9b"
+                "reference": "c7e8131653480146d4c32c2523d53e0e59a7af19"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tighten/collect/zipball/d05d932b9f066b2de4601fb17f72aab69b7d1c9b",
-                "reference": "d05d932b9f066b2de4601fb17f72aab69b7d1c9b",
+                "url": "https://api.github.com/repos/tighten/collect/zipball/c7e8131653480146d4c32c2523d53e0e59a7af19",
+                "reference": "c7e8131653480146d4c32c2523d53e0e59a7af19",
                 "shasum": ""
             },
             "require": {
@@ -6402,9 +6402,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tighten/collect/issues",
-                "source": "https://github.com/tighten/collect/tree/v8.75.0"
+                "source": "https://github.com/tighten/collect/tree/v8.76.1"
             },
-            "time": "2021-12-07T18:53:43+00:00"
+            "time": "2021-12-14T22:01:32+00:00"
         },
         {
             "name": "twig/twig",
