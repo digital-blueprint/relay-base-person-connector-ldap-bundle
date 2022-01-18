@@ -54,6 +54,8 @@ https://symfony.com/doc/current/bundles/configuration.html
 
 ## Customization
 
+TODO: Update
+
 You can implement the [LDAPApiProviderInterface](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle/-/blob/main/src/API/LDAPApiProviderInterface.php)
 to customize how attributes are fetched from the LDAP server and assigned to the `Person` entity or what `Person` entities
 are fetched from certain external services like in the [ALMA Bundle](https://gitlab.tugraz.at/dbp/library/api-alma-bundle).

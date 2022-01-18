@@ -15,7 +15,7 @@ use Adldap\Connections\ProviderInterface;
 use Adldap\Models\User;
 use Adldap\Query\Builder;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
-use Dbp\Relay\BasePersonConnectorLdapBundle\API\LDAPApiProviderInterface;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonForExternalServiceEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
@@ -70,17 +70,14 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     private $birthdayAttributeName;
 
-    private $ldapApiProvider;
-
     /** @var EventDispatcherInterface */
     private $dispatcher;
 
-    public function __construct(ContainerInterface $locator, LDAPApiProviderInterface $ldapApiProvider, EventDispatcherInterface $dispatcher)
+    public function __construct(ContainerInterface $locator, EventDispatcherInterface $dispatcher)
     {
         $this->ad = new Adldap();
         $this->cacheTTL = 0;
         $this->currentPerson = null;
-        $this->ldapApiProvider = $ldapApiProvider;
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
         $this->dispatcher = $dispatcher;
@@ -280,9 +277,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             }
         }
 
-        // Call post-processing hook
-        $this->ldapApiProvider->personFromUserItemPostHook($attributes, $person, $full);
-
         $postEvent = new PersonFromUserItemPostEvent($attributes, $person, $full);
         $this->dispatcher->dispatch($postEvent, PersonFromUserItemPostEvent::NAME);
 
@@ -323,7 +317,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public function getPersonForExternalService(string $service, string $serviceID): Person
     {
-        $person = $this->ldapApiProvider->getPersonForExternalServiceHook($service, $serviceID);
+        $event = new PersonForExternalServiceEvent($service, $serviceID);
+        $this->dispatcher->dispatch($event, PersonForExternalServiceEvent::NAME);
+        $person = $event->getPerson();
 
         if (!$person) {
             throw new BadRequestHttpException("Unknown service: $service");
