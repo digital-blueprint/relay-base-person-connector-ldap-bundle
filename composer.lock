@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7f54ebe0115a00d910c4fa039efaee3f",
+    "content-hash": "cbf75567a9a5c49eda7c8c2ef0ab9930",
     "packages": [
         {
             "name": "adldap2/adldap2",
@@ -9605,5 +9605,5 @@
     "platform-overrides": {
         "php": "7.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.1.0"
 }

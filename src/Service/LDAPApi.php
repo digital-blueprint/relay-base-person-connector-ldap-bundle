@@ -16,6 +16,8 @@ use Adldap\Models\User;
 use Adldap\Query\Builder;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\API\LDAPApiProviderInterface;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
@@ -24,6 +26,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Cache\Psr16Cache;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -69,7 +72,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     private $ldapApiProvider;
 
-    public function __construct(ContainerInterface $locator, LDAPApiProviderInterface $ldapApiProvider)
+    /** @var EventDispatcherInterface */
+    private $dispatcher;
+
+    public function __construct(ContainerInterface $locator, LDAPApiProviderInterface $ldapApiProvider, EventDispatcherInterface $dispatcher)
     {
         $this->ad = new Adldap();
         $this->cacheTTL = 0;
@@ -77,6 +83,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->ldapApiProvider = $ldapApiProvider;
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
+        $this->dispatcher = $dispatcher;
     }
 
     public function setConfig(array $config)
@@ -239,6 +246,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public function personFromUserItem(User $user, bool $full): Person
     {
+        $preEvent = new PersonFromUserItemPreEvent($user, $full);
+        $this->dispatcher->dispatch($preEvent, PersonFromUserItemPreEvent::NAME);
+        $user = $preEvent->getUser();
+
         $identifier = $user->getFirstAttribute($this->identifierAttributeName);
 
         $person = new Person();
@@ -272,7 +283,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         // Call post-processing hook
         $this->ldapApiProvider->personFromUserItemPostHook($attributes, $person, $full);
 
-        return $person;
+        $postEvent = new PersonFromUserItemPostEvent($attributes, $person, $full);
+        $this->dispatcher->dispatch($postEvent, PersonFromUserItemPostEvent::NAME);
+
+        return $postEvent->getPerson();
     }
 
     public function getRolesForCurrentPerson(): array

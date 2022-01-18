@@ -11,6 +11,7 @@
         "dbp/relay-base-person-bundle": "^0.1.5",
         "guzzlehttp/guzzle": "^7.3",
         "league/uri": "^6.5",
+        "symfony/event-dispatcher": "^5.4",
         "symfony/framework-bundle": "^5.2"
     },
     "require-dev": {
