@@ -11,8 +11,9 @@ use Adldap\Query\Grammar;
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
-use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\DummyLDAPApiProvider;
+use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonFromUserItemSubscriber;
 use Mockery;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class PersonTest extends ApiTestCase
 {
@@ -29,8 +30,11 @@ class PersonTest extends ApiTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $ldapApiProvider = new DummyLDAPApiProvider();
-        $this->api = new LDAPApi(self::createClient()->getContainer(), $ldapApiProvider);
+        $personFromUserItemSubscriber = new PersonFromUserItemSubscriber();
+        $eventDispatcher = new EventDispatcher();
+        $eventDispatcher->addSubscriber($personFromUserItemSubscriber);
+
+        $this->api = new LDAPApi(self::createClient()->getContainer(), $eventDispatcher);
         $this->api->setConfig([
             'ldap' => [
                 'attributes' => [
@@ -84,7 +88,7 @@ class PersonTest extends ApiTestCase
         }
     }
 
-    public function testLDAPApiProvider()
+    public function testPersonFromUserItemPostEvent()
     {
         $user = new AdldapUser([
             'cn' => ['foobar'],

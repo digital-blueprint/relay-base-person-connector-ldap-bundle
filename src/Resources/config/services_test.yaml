@@ -1,7 +1,4 @@
 services:
-  Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\DummyLDAPApiProvider:
+  Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonFromUserItemSubscriber:
     autowire: true
     autoconfigure: true
-
-  Dbp\Relay\BasePersonBundle\API\PersonProviderInterface:
-    '@Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\DummyLDAPApiProvider'
