@@ -1,4 +1,1 @@
 services:
-  Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonFromUserItemSubscriber:
-    autowire: true
-    autoconfigure: true
