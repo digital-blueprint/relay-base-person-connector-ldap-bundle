@@ -11,6 +11,7 @@ use Adldap\Query\Grammar;
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
+use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonForExternalServiceSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonFromUserItemSubscriber;
 use Mockery;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -31,8 +32,10 @@ class PersonTest extends ApiTestCase
     {
         parent::setUp();
         $personFromUserItemSubscriber = new PersonFromUserItemSubscriber();
+        $personForExternalServiceSubscriber = new PersonForExternalServiceSubscriber();
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addSubscriber($personFromUserItemSubscriber);
+        $eventDispatcher->addSubscriber($personForExternalServiceSubscriber);
 
         $this->api = new LDAPApi(self::createClient()->getContainer(), $eventDispatcher);
         $this->api->setConfig([
@@ -88,6 +91,17 @@ class PersonTest extends ApiTestCase
         }
     }
 
+    public function testPersonFromUserItemPreEvent()
+    {
+        $user = new AdldapUser([
+            'cn' => ['foobar'],
+        ], $this->newBuilder());
+
+        $this->api->personFromUserItem($user, false);
+
+        $this->assertEquals($user->getCompany(), 'TestCompany');
+    }
+
     public function testPersonFromUserItemPostEvent()
     {
         $user = new AdldapUser([
@@ -97,5 +111,16 @@ class PersonTest extends ApiTestCase
         $person = $this->api->personFromUserItem($user, false);
 
         $this->assertEquals($person->getExtraData('test'), 'my-test-string');
+    }
+
+    public function testPersonForExternalServiceEvent()
+    {
+        $user = new AdldapUser([
+            'cn' => ['foobar'],
+        ], $this->newBuilder());
+
+        $person = $this->api->getPersonForExternalService('test-service', '17');
+
+        $this->assertEquals($person->getExtraData('test-service'), 'my-test-service-string-17');
     }
 }
