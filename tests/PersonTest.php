@@ -91,16 +91,16 @@ class PersonTest extends ApiTestCase
         }
     }
 
-    public function testPersonFromUserItemPreEvent()
-    {
-        $user = new AdldapUser([
-            'cn' => ['foobar'],
-        ], $this->newBuilder());
-
-        $this->api->personFromUserItem($user, false);
-
-        $this->assertEquals($user->getCompany(), 'TestCompany');
-    }
+//    public function testPersonFromUserItemPreEvent()
+//    {
+//        $user = new AdldapUser([
+//            'cn' => ['foobar'],
+//        ], $this->newBuilder());
+//
+//        $this->api->personFromUserItem($user, false);
+//
+//        $this->assertEquals($user->getCompany(), 'TestCompany');
+//    }
 
     public function testPersonFromUserItemPostEvent()
     {
