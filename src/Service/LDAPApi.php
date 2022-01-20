@@ -18,6 +18,7 @@ use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonForExternalServiceEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPreEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
@@ -219,6 +220,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public function getPersonUserItem(string $identifier): ?User
     {
+        $preEvent = new PersonUserItemPreEvent($identifier);
+        $this->dispatcher->dispatch($preEvent, PersonUserItemPreEvent::NAME);
+        $identifier = $preEvent->getIdentifier();
+
         try {
             $provider = $this->getProvider();
             $builder = $this->getCachedBuilder($provider);
