@@ -97,8 +97,13 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             'base_dn' => $config['ldap']['base_dn'] ?? '',
             'username' => $config['ldap']['username'] ?? '',
             'password' => $config['ldap']['password'] ?? '',
-            'use_tls' => true,
         ];
+
+        $encryption = $config['ldap']['encryption'];
+        assert(in_array($encryption, ['start_tls', 'simple_tls'], true));
+        $this->providerConfig['use_tls'] = ($encryption === 'start_tls');
+        $this->providerConfig['use_ssl'] = ($encryption === 'simple_tls');
+        $this->providerConfig['port'] = ($encryption === 'start_tls') ? 389 : 636;
     }
 
     public function setDeploymentEnvironment(string $env)

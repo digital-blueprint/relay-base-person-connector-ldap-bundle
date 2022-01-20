@@ -24,6 +24,11 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('base_dn')->end()
             ->scalarNode('username')->end()
             ->scalarNode('password')->end()
+            ->enumNode('encryption')
+                ->info('simple_tls uses port 636 and is sometimes referred to as "SSL", start_tls uses port 389 and is sometimes referred to as "TLS"')
+                ->values(['start_tls', 'simple_tls'])
+                ->defaultValue('start_tls')
+            ->end()
             ->end();
 
         $attributesBuilder = new TreeBuilder('attributes');

@@ -40,6 +40,7 @@ class PersonTest extends ApiTestCase
         $this->api = new LDAPApi(self::createClient()->getContainer(), $eventDispatcher);
         $this->api->setConfig([
             'ldap' => [
+                'encryption' => 'simple_tls',
                 'attributes' => [
                     'email' => 'email',
                     'birthday' => 'dateofbirth',
