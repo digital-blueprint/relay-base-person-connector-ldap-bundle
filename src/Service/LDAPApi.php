@@ -248,9 +248,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public function personFromUserItem(User $user, bool $full): Person
     {
-        $preEvent = new PersonFromUserItemPreEvent($user, $full);
-        $this->dispatcher->dispatch($preEvent, PersonFromUserItemPreEvent::NAME);
-        $user = $preEvent->getUser();
+//        $preEvent = new PersonFromUserItemPreEvent($user, $full);
+//        $this->dispatcher->dispatch($preEvent, PersonFromUserItemPreEvent::NAME);
+//        $user = $preEvent->getUser();
 
         $identifier = $user->getFirstAttribute($this->identifierAttributeName);
 
