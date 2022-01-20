@@ -260,7 +260,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $person->setFamilyName($user->getFirstAttribute($this->familyNameAttributeName));
 
         if ($this->emailAttributeName !== '') {
-            $person->setEmail($user->getFirstAttribute($this->emailAttributeName));
+            $person->setEmail($user->getFirstAttribute($this->emailAttributeName) ?? '');
         }
 
         $birthDateString = $this->birthdayAttributeName !== '' ?
