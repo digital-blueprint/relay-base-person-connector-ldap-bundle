@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Event;
 
-use Adldap\Models\User;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class PersonUserItemPreEvent extends Event

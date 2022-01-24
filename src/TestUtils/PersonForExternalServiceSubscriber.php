@@ -22,9 +22,9 @@ class PersonForExternalServiceSubscriber implements EventSubscriberInterface
         $service = $event->getService();
         $serviceID = $event->getServiceID();
 
-        if ($service == 'test-service') {
+        if ($service === 'test-service') {
             $person = new Person();
-            $person->setExtraData('test-service', 'my-test-service-string-' . $serviceID);
+            $person->setExtraData('test-service', 'my-test-service-string-'.$serviceID);
             $event->setPerson($person);
         }
     }
