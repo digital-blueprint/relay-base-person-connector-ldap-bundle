@@ -13,6 +13,7 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
 use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonForExternalServiceSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonFromUserItemSubscriber;
+use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonUserItemSubscriber;
 use Mockery;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
@@ -33,9 +34,11 @@ class PersonTest extends ApiTestCase
         parent::setUp();
         $personFromUserItemSubscriber = new PersonFromUserItemSubscriber();
         $personForExternalServiceSubscriber = new PersonForExternalServiceSubscriber();
+        $personUserItemSubscriber = new PersonUserItemSubscriber();
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addSubscriber($personFromUserItemSubscriber);
         $eventDispatcher->addSubscriber($personForExternalServiceSubscriber);
+        $eventDispatcher->addSubscriber($personUserItemSubscriber);
 
         $this->api = new LDAPApi(self::createClient()->getContainer(), $eventDispatcher);
         $this->api->setConfig([
@@ -124,4 +127,11 @@ class PersonTest extends ApiTestCase
 
         $this->assertEquals($person->getExtraData('test-service'), 'my-test-service-string-17');
     }
+
+//    public function testPersonUserItemEvent()
+//    {
+//        $user = $this->api->getPersonUserItem('foobar');
+//
+//        $this->assertEquals($user->getName(), 'foobar');
+//    }
 }
