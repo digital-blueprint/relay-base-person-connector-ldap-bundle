@@ -52,18 +52,155 @@ dbp_relay_base_person_connector_ldap:
 For more info on bundle configuration see
 https://symfony.com/doc/current/bundles/configuration.html
 
-## Customization
+## Events
 
-TODO: Update
+To modify the behavior of the connector bundle the following events are registered:
 
-You can implement the [LDAPApiProviderInterface](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle/-/blob/main/src/API/LDAPApiProviderInterface.php)
-to customize how attributes are fetched from the LDAP server and assigned to the `Person` entity or what `Person` entities
-are fetched from certain external services like in the [ALMA Bundle](https://gitlab.tugraz.at/dbp/library/api-alma-bundle).
+### PersonUserItemPreEvent
 
-You'll find an example at [DummyLDAPApiProvider.php](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle/-/blob/main/src/Service/DummyLDAPApiProvider.php).
+This event allows to modify the identifier before a user is loaded from LDAP.
 
-If you don't need any customization, you don't need to implement the interface,
-there is the default implementation which is used by default.
+An event subscriber receives a `\Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent` instance
+in a service for example in `src/EventSubscriber/PersonUserItemSubscriber.php`:
+
+```php
+<?php
+
+namespace App\EventSubscriber;
+
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
+class PersonUserItemSubscriber implements EventSubscriberInterface
+{
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            PersonUserItemPreEvent::NAME => 'onPre',
+        ];
+    }
+
+    public function onPre(PersonUserItemPreEvent $event)
+    {
+        $identifier = $event->getIdentifier();
+
+        // Example:
+        // Replace once or double encoded $ character at the start like "%2524F1234" or "%24F1234"
+        $identifier = preg_replace('/^%(25)?24/', '$', $identifier);
+
+        $event->setIdentifier($identifier);
+    }
+}
+```
+
+### PersonForExternalServiceEvent
+
+Some integration services may need to fetch a person from an external API with a
+`\Dbp\Relay\BasePersonBundle\API\PersonProviderInterface`, for example:
+
+```php
+$person = $this->personProvider->getPersonForExternalService('SOME_SERVICE', $userId);
+```
+
+To implement such a fetch process from an external API this event can be used.
+
+An event subscriber receives a `\Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonForExternalServiceEvent` instance
+in a service for example in `src/EventSubscriber/PersonForExternalServiceSubscriber.php`:
+
+```php
+<?php
+
+namespace App\EventSubscriber;
+
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonForExternalServiceEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use App\Service\ExternalApi;
+
+class PersonForExternalServiceSubscriber implements EventSubscriberInterface
+{
+    private $ldap;
+    private $externalApi;
+
+    public function __construct(LDAPApi $ldap, ExternalApi $externalApi)
+    {
+        $this->ldap = $ldap;
+        $this->externalApi = $externalApi;
+    }
+
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            PersonForExternalServiceEvent::NAME => 'onEvent',
+        ];
+    }
+
+    public function onEvent(PersonForExternalServiceEvent $event)
+    {
+        $service = $event->getService();
+        $serviceID = $event->getServiceID();
+
+        if ($service === 'SOME_SERVICE') {
+            $user = $this->externalApi->getPersonUserItemByExternalUserId($serviceID);
+            $person = $this->ldap->personFromUserItem($user, true);
+            $event->setPerson($person);
+        }
+    }
+}
+```
+
+### PersonFromUserItemPostEvent
+
+This event allows to modify the person after it is converted from an LDAP User.
+You can use this for example to populate the person with additional data.
+
+An event subscriber receives a `\Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent` instance
+in a service for example in `src/EventSubscriber/PersonFromUserItemSubscriber.php`:
+
+```php
+<?php
+
+namespace App\EventSubscriber;
+
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
+class PersonFromUserItemSubscriber implements EventSubscriberInterface
+{
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            PersonFromUserItemPostEvent::NAME => 'onPost',
+        ];
+    }
+
+    public function onPost(PersonFromUserItemPostEvent $event)
+    {
+        $attributes = $event->getAttributes();
+        $person = $event->getPerson();
+
+        $birthDateString = trim($attributes['dateofbirth'][0] ?? '');
+
+        if ($birthDateString !== '') {
+            $matches = [];
+
+            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $birthDateString, $matches)) {
+                $person->setBirthDate("{$matches[1]}-{$matches[2]}-{$matches[3]}");
+            // get birthday from LDAP DateOfBirth (e.g. 19810718)
+            } elseif (preg_match('/^(\d{4})(\d{2})(\d{2})$/', $birthDateString, $matches)) {
+                $person->setBirthDate("{$matches[1]}-{$matches[2]}-{$matches[3]}");
+            // sometimes also "1994-06-14 00:00:00"
+            } elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2}) .*$/', $birthDateString, $matches)) {
+                $person->setBirthDate("{$matches[1]}-{$matches[2]}-{$matches[3]}");
+            }
+        }
+
+        $person->setExtraData('special_data', $attributes['some_special_attribute'] ?? '');
+
+        $event->setPerson($person);
+    }
+}
+```
 
 ## Development & Testing
 
