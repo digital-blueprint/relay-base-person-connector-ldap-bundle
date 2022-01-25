@@ -7,6 +7,11 @@ namespace Dbp\Relay\BasePersonConnectorLdapBundle\Event;
 use Adldap\Models\User;
 use Symfony\Contracts\EventDispatcher\Event;
 
+/**
+ * Class PersonFromUserItemPreEvent.
+ *
+ * This event is currently disabled!
+ */
 class PersonFromUserItemPreEvent extends Event
 {
     public const NAME = 'dbp.relay.base_person_connector_ldap_bundle.person_from_user_item.pre';
