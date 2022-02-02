@@ -87,6 +87,8 @@ class PersonTest extends ApiTestCase
             $user = new AdldapUser([
                 'cn' => ['foobar'],
                 'dateofbirth' => [$variant],
+                'givenName' => ['givenName'],
+                'sn' => ['familyName'],
             ], $this->newBuilder());
 
             $person = $this->api->personFromUserItem($user, false);
@@ -110,6 +112,8 @@ class PersonTest extends ApiTestCase
     {
         $user = new AdldapUser([
             'cn' => ['foobar'],
+            'givenName' => ['givenName'],
+            'sn' => ['familyName'],
         ], $this->newBuilder());
 
         $person = $this->api->personFromUserItem($user, false);
