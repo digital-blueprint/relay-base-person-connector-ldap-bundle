@@ -21,11 +21,6 @@ class LDAPPersonProvider implements PersonProviderInterface
         return $this->ldapApi->getPersons($filters);
     }
 
-    public function getPersonsByNameAndBirthDate(string $givenName, string $familyName, string $birthDate): array
-    {
-        return $this->ldapApi->getPersonsByNameAndBirthDate($givenName, $familyName, $birthDate);
-    }
-
     public function getPerson(string $id): Person
     {
         return $this->ldapApi->getPerson($id);

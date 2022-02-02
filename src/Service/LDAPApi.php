@@ -189,40 +189,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         return $persons;
     }
 
-    /**
-     * @return Person[]
-     */
-    public function getPersonsByNameAndBirthDate(string $givenName, string $familyName, string $birthDate): array
-    {
-        if ($this->birthdayAttributeName === '') {
-            return [];
-        }
-
-        try {
-            $provider = $this->getProvider();
-            $builder = $this->getCachedBuilder($provider);
-
-            /** @var User[] $users */
-            $users = $builder
-                ->where('objectClass', '=', $provider->getSchema()->person())
-                ->whereEquals($this->givenNameAttributeName, $givenName)
-                ->whereEquals($this->familyNameAttributeName, $familyName)
-                ->whereEquals($this->birthdayAttributeName, $birthDate) // (e.g. 1981-07-18)
-                ->sortBy($this->familyNameAttributeName, 'asc')->paginate($this->PAGESIZE)->getResults();
-
-            $people = [];
-
-            foreach ($users as $user) {
-                $people[] = $this->personFromUserItem($user, true);
-            }
-
-            return $people;
-        } catch (\Adldap\Auth\BindException $e) {
-            // There was an issue binding / connecting to the server.
-            throw new ApiError(Response::HTTP_BAD_GATEWAY, sprintf('Persons could not be loaded! Message: %s', CoreTools::filterErrorMessage($e->getMessage())));
-        }
-    }
-
     public function getPersonUserItem(string $identifier): ?User
     {
         $preEvent = new PersonUserItemPreEvent($identifier);
