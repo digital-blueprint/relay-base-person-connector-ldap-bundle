@@ -106,6 +106,13 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->providerConfig['port'] = ($encryption === 'start_tls') ? 389 : 636;
     }
 
+    public function checkConnection()
+    {
+        $provider = $this->getProvider();
+        $builder = $this->getCachedBuilder($provider);
+        $builder->first();
+    }
+
     public function setDeploymentEnvironment(string $env)
     {
         $this->deploymentEnv = $env;
