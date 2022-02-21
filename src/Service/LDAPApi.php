@@ -378,7 +378,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         return $this->currentPerson;
     }
 
-    public static function getSubscribedServices()
+    public static function getSubscribedServices(): array
     {
         return [
             UserSessionInterface::class,
