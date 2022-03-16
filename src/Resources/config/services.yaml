@@ -6,6 +6,3 @@ services:
 
   Dbp\Relay\BasePersonBundle\API\PersonProviderInterface:
     '@Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider'
-
-  Dbp\Relay\AuthBundle\API\UserRolesInterface:
-    '@Dbp\Relay\BasePersonConnectorLdapBundle\Service\CustomUserRoles'

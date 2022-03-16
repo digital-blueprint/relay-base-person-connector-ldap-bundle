@@ -266,24 +266,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         return $postEvent->getPerson();
     }
 
-    public function getRolesForCurrentPerson(): array
-    {
-        $person = $this->getCurrentPerson();
-        if ($person !== null) {
-            $roles = $person->getExtraData('ldap-roles');
-
-            if ($roles === null) {
-                return [];
-            }
-
-            assert(is_array($roles));
-
-            return $roles;
-        }
-
-        return [];
-    }
-
     public function getPerson(string $id): Person
     {
         $id = str_replace('/people/', '', $id);
