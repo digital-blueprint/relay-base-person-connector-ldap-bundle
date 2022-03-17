@@ -93,62 +93,6 @@ class PersonUserItemSubscriber implements EventSubscriberInterface
 }
 ```
 
-### PersonForExternalServiceEvent
-
-Some integration services may need to fetch a person from an external API with a
-`\Dbp\Relay\BasePersonBundle\API\PersonProviderInterface`, for example:
-
-```php
-$person = $this->personProvider->getPersonForExternalService('SOME_SERVICE', $userId);
-```
-
-To implement such a fetch process from an external API this event can be used.
-
-An event subscriber receives a `\Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonForExternalServiceEvent` instance
-in a service for example in `src/EventSubscriber/PersonForExternalServiceSubscriber.php`:
-
-```php
-<?php
-
-namespace App\EventSubscriber;
-
-use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonForExternalServiceEvent;
-use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use App\Service\ExternalApi;
-
-class PersonForExternalServiceSubscriber implements EventSubscriberInterface
-{
-    private $ldap;
-    private $externalApi;
-
-    public function __construct(LDAPApi $ldap, ExternalApi $externalApi)
-    {
-        $this->ldap = $ldap;
-        $this->externalApi = $externalApi;
-    }
-
-    public static function getSubscribedEvents(): array
-    {
-        return [
-            PersonForExternalServiceEvent::NAME => 'onEvent',
-        ];
-    }
-
-    public function onEvent(PersonForExternalServiceEvent $event)
-    {
-        $service = $event->getService();
-        $serviceID = $event->getServiceID();
-
-        if ($service === 'SOME_SERVICE') {
-            $user = $this->externalApi->getPersonUserItemByExternalUserId($serviceID);
-            $person = $this->ldap->personFromUserItem($user, true);
-            $event->setPerson($person);
-        }
-    }
-}
-```
-
 ### PersonFromUserItemPostEvent
 
 This event allows to modify the person after it is converted from an LDAP User.

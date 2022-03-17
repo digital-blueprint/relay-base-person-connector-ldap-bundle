@@ -121,17 +121,6 @@ class PersonTest extends ApiTestCase
         $this->assertEquals($person->getExtraData('test'), 'my-test-string');
     }
 
-    public function testPersonForExternalServiceEvent()
-    {
-        $user = new AdldapUser([
-            'cn' => ['foobar'],
-        ], $this->newBuilder());
-
-        $person = $this->api->getPersonForExternalService('test-service', '17');
-
-        $this->assertEquals($person->getExtraData('test-service'), 'my-test-service-string-17');
-    }
-
 //    public function testPersonUserItemEvent()
 //    {
 //        $user = $this->api->getPersonUserItem('foobar');

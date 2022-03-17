@@ -26,11 +26,6 @@ class LDAPPersonProvider implements PersonProviderInterface
         return $this->ldapApi->getPerson($id);
     }
 
-    public function getPersonForExternalService(string $service, string $serviceID): Person
-    {
-        return $this->ldapApi->getPersonForExternalService($service, $serviceID);
-    }
-
     public function getCurrentPerson(): ?Person
     {
         return $this->ldapApi->getCurrentPerson();

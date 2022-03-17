@@ -15,7 +15,6 @@ use Adldap\Connections\ProviderInterface;
 use Adldap\Models\User;
 use Adldap\Query\Builder;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
-use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonForExternalServiceEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPreEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
@@ -29,7 +28,6 @@ use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
@@ -280,19 +278,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         } else {
             $user = $this->getPersonUserItem($id);
             $person = $this->personFromUserItem($user, true);
-        }
-
-        return $person;
-    }
-
-    public function getPersonForExternalService(string $service, string $serviceID): Person
-    {
-        $event = new PersonForExternalServiceEvent($service, $serviceID);
-        $this->dispatcher->dispatch($event, PersonForExternalServiceEvent::NAME);
-        $person = $event->getPerson();
-
-        if (!$person) {
-            throw new BadRequestHttpException("Unknown service: $service");
         }
 
         return $person;
