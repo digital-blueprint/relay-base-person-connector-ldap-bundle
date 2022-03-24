@@ -111,6 +111,42 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $builder->first();
     }
 
+    public function checkAttributeExists(string $attribute): bool
+    {
+        $provider = $this->getProvider();
+        $builder = $this->getCachedBuilder($provider);
+
+        /** @var User $user */
+        $user = $builder
+            ->where('objectClass', '=', $provider->getSchema()->person())
+            ->whereHas($attribute)
+            ->first();
+
+        return $user !== null;
+    }
+
+    public function checkAttributes()
+    {
+        $attributes = [
+            $this->identifierAttributeName,
+            $this->givenNameAttributeName,
+            $this->familyNameAttributeName,
+            $this->emailAttributeName,
+            $this->birthdayAttributeName,
+        ];
+
+        $missing = [];
+        foreach ($attributes as $attr) {
+            if ($attr !== '' && !$this->checkAttributeExists($attr)) {
+                $missing[] = $attr;
+            }
+        }
+
+        if (count($missing) > 0) {
+            throw new \RuntimeException('The following LDAP attributes were not found: '.join(', ', $missing));
+        }
+    }
+
     public function setDeploymentEnvironment(string $env)
     {
         $this->deploymentEnv = $env;
