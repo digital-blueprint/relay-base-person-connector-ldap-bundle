@@ -264,12 +264,12 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 //        $this->dispatcher->dispatch($preEvent, PersonFromUserItemPreEvent::NAME);
 //        $user = $preEvent->getUser();
 
-        $identifier = $user->getFirstAttribute($this->identifierAttributeName);
+        $identifier = $user->getFirstAttribute($this->identifierAttributeName) ?? '';
 
         $person = new Person();
         $person->setIdentifier($identifier);
-        $person->setGivenName($user->getFirstAttribute($this->givenNameAttributeName));
-        $person->setFamilyName($user->getFirstAttribute($this->familyNameAttributeName));
+        $person->setGivenName($user->getFirstAttribute($this->givenNameAttributeName) ?? '');
+        $person->setFamilyName($user->getFirstAttribute($this->familyNameAttributeName) ?? '');
 
         if ($this->emailAttributeName !== '') {
             $person->setEmail($user->getFirstAttribute($this->emailAttributeName) ?? '');
