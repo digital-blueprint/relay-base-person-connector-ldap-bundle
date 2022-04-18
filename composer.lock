@@ -1222,7 +1222,7 @@
         },
         {
             "name": "illuminate/contracts",
-            "version": "v8.83.7",
+            "version": "v8.83.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
@@ -6659,16 +6659,16 @@
         },
         {
             "name": "tightenco/collect",
-            "version": "v8.83.6",
+            "version": "v8.83.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tighten/collect.git",
-                "reference": "e29832b2a3f20e7de307d3c69bf257693c07ce2c"
+                "reference": "7275c1b5f6bfc539d72bb5984d3b9a89e47e27c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tighten/collect/zipball/e29832b2a3f20e7de307d3c69bf257693c07ce2c",
-                "reference": "e29832b2a3f20e7de307d3c69bf257693c07ce2c",
+                "url": "https://api.github.com/repos/tighten/collect/zipball/7275c1b5f6bfc539d72bb5984d3b9a89e47e27c9",
+                "reference": "7275c1b5f6bfc539d72bb5984d3b9a89e47e27c9",
                 "shasum": ""
             },
             "require": {
@@ -6707,9 +6707,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tighten/collect/issues",
-                "source": "https://github.com/tighten/collect/tree/v8.83.6"
+                "source": "https://github.com/tighten/collect/tree/v8.83.8"
             },
-            "time": "2022-04-01T16:23:12+00:00"
+            "time": "2022-04-15T20:31:14+00:00"
         },
         {
             "name": "twig/twig",
