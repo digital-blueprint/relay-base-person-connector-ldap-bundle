@@ -1,4 +1,4 @@
-# DbpRelayBasePersonConnectorLdapBundle
+ # DbpRelayBasePersonConnectorLdapBundle
 
 [GitLab](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle) | [Packagist](https://packagist.org/packages/dbp/relay-base-person-connector-ldap-bundle)
 
@@ -95,11 +95,14 @@ class PersonUserItemSubscriber implements EventSubscriberInterface
 
 ### PersonFromUserItemPostEvent
 
-This event allows to modify the person after it is converted from an LDAP User.
-You can use this for example to populate the person with additional data.
+This event allows to modify a `Person` entity after it is created based on the data from the corresponding LDAP user.
+You can use it to populate the `Person` entity with additional data.
 
-An event subscriber receives a `\Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent` instance
-in a service for example in `src/EventSubscriber/PersonFromUserItemSubscriber.php`:
+For example, you can add additional "local data" attributes, which you want to include in responses to `Person` GET requests.
+
+Event subscribers receive a `\Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent` instance containing the `Person` entity and all user attributes returned by the LDAP server.
+
+For example, create an event subscriber `src/EventSubscriber/PersonFromUserItemSubscriber.php`:
 
 ```php
 <?php
@@ -140,10 +143,18 @@ class PersonFromUserItemSubscriber implements EventSubscriberInterface
         }
 
         $person->setExtraData('special_data', $attributes['some_special_attribute'] ?? '');
-
-        $event->setPerson($person);
+        
+        $person->trySetLocalDataAttribute('foo', $attributes['foo']);
     }
 }
+```
+
+And add it to your `src/Resources/config/services.yaml`:
+
+```yaml
+App\EventSubscriber\PersonFromUserItemSubscriber:
+  autowire: true
+  autoconfigure: true
 ```
 
 ## Development & Testing
