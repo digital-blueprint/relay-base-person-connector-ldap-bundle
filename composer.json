@@ -8,7 +8,8 @@
         "ext-simplexml": "*",
         "adldap2/adldap2": "^10.3",
         "dbp/relay-auth-bundle": "^0.1.6",
-        "dbp/relay-base-person-bundle": "^0.2.0",
+        "dbp/relay-base-person-bundle": "dev-main as 0.2.0",
+        "dbp/relay-core-bundle": "^0.1.35",
         "guzzlehttp/guzzle": "^7.3",
         "league/uri": "^6.5",
         "symfony/event-dispatcher": "^5.4",
@@ -40,6 +41,9 @@
         "sort-packages": true,
         "platform": {
             "php": "7.3"
+        },
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true
         }
     },
     "scripts": {

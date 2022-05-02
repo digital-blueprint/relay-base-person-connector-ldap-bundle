@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Event;
 
 use Dbp\Relay\BasePersonBundle\Entity\Person;
-use Symfony\Contracts\EventDispatcher\Event;
+use Dbp\Relay\CoreBundle\LocalData\LocalDataAwareEvent;
 
-class PersonFromUserItemPostEvent extends Event
+class PersonFromUserItemPostEvent extends LocalDataAwareEvent
 {
     public const NAME = 'dbp.relay.base_person_connector_ldap_bundle.person_from_user_item.post';
 
@@ -17,6 +17,8 @@ class PersonFromUserItemPostEvent extends Event
 
     public function __construct(array $attributes, Person $person, bool $full)
     {
+        parent::__construct($person);
+
         $this->attributes = $attributes;
         $this->person = $person;
         $this->full = $full;
@@ -40,5 +42,15 @@ class PersonFromUserItemPostEvent extends Event
     public function setPerson(Person $person): void
     {
         $this->person = $person;
+    }
+
+    public function getEntity(): Person
+    {
+        return $this->person;
+    }
+
+    public function getSourceData(): array
+    {
+        return $this->attributes;
     }
 }
