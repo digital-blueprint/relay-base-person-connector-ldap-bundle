@@ -238,7 +238,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         return $persons;
     }
 
-    private function getPersonUserItem(string $identifier): ?User
+    private function getPersonUserItem(string $identifier): User
     {
         $preEvent = new PersonUserItemPreEvent($identifier);
         $this->dispatcher->dispatch($preEvent, PersonUserItemPreEvent::NAME);
@@ -257,6 +257,8 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             if ($user === null) {
                 throw new NotFoundHttpException(sprintf("Person with id '%s' could not be found!", $identifier));
             }
+
+            assert($identifier === $user->getFirstAttribute($this->identifierAttributeName));
 
             /* @var User $user */
             return $user;
