@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "92bc4a145720f84a7607d0270308ac9f",
+    "content-hash": "1262fab1c713ea8767e23bf5b9729efc",
     "packages": [
         {
             "name": "adldap2/adldap2",
@@ -396,11 +396,11 @@
         },
         {
             "name": "dbp/relay-core-bundle",
-            "version": "0.1.37",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-core-bundle",
-                "reference": "b58c833026de0aa0572a38684d0b0f2107e46aee"
+                "reference": "7f2301d63ff98fa9cdd9faaac5e610f57f8c64db"
             },
             "require": {
                 "api-platform/core": "^2.6.6",
@@ -409,6 +409,8 @@
                 "ext-fileinfo": "*",
                 "ext-json": "*",
                 "guzzlehttp/guzzle": "^7.0",
+                "kevinrob/guzzle-cache-middleware": "^4.0",
+                "league/uri": "^6.5",
                 "nelmio/cors-bundle": "^2.1.0",
                 "php": "^7.3 || ^8.0",
                 "phpdocumentor/reflection-docblock": "^3.0 || ^4.0 || ^5.0",
@@ -442,6 +444,7 @@
                 "symfony/phpunit-bridge": "^5.3",
                 "vimeo/psalm": "^4.4"
             },
+            "default-branch": true,
             "type": "symfony-bundle",
             "extra": {
                 "hooks": {
@@ -460,7 +463,7 @@
                 "AGPL-3.0-or-later"
             ],
             "description": "The core bundle of the Relay API gateway",
-            "time": "2022-06-22T09:04:47+00:00"
+            "time": "2022-08-10T12:21:15+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -11183,9 +11186,18 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "dbp/relay-core-bundle",
+            "version": "dev-main",
+            "alias": "0.1.37",
+            "alias_normalized": "0.1.37.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "dbp/relay-core-bundle": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -11197,5 +11209,5 @@
     "platform-overrides": {
         "php": "7.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

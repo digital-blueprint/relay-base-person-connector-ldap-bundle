@@ -20,7 +20,6 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
-use Dbp\Relay\CoreBundle\LocalData\LocalData;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataAwareEventDispatcher;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
@@ -68,11 +67,8 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     private $birthdayAttributeName;
 
-    /** @var EventDispatcherInterface */
-    private $dispatcher;
-
     /** @var LocalDataAwareEventDispatcher */
-    private $localDataAwareEventDispatcher;
+    private $eventDispatcher;
 
     public function __construct(ContainerInterface $locator, EventDispatcherInterface $dispatcher)
     {
@@ -81,8 +77,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->currentPerson = null;
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
-        $this->dispatcher = $dispatcher;
-        $this->localDataAwareEventDispatcher = new LocalDataAwareEventDispatcher(Person::class, $dispatcher);
+        $this->eventDispatcher = new LocalDataAwareEventDispatcher(Person::class, $dispatcher);
     }
 
     public function setConfig(array $config)
@@ -226,7 +221,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public function getPersons(array $filters): array
     {
-        $this->localDataAwareEventDispatcher->initRequestedLocalDataAttributes(LocalData::getIncludeParameter($filters));
+        $this->eventDispatcher->onNewOperation($filters);
 
         $persons = [];
         $items = $this->getPeopleUserItems($filters);
@@ -241,7 +236,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     private function getPersonUserItem(string $identifier): User
     {
         $preEvent = new PersonUserItemPreEvent($identifier);
-        $this->dispatcher->dispatch($preEvent, PersonUserItemPreEvent::NAME);
+        $this->eventDispatcher->dispatch($preEvent, PersonUserItemPreEvent::NAME);
         $identifier = $preEvent->getIdentifier();
 
         try {
@@ -271,7 +266,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     public function personFromUserItem(User $user, bool $full): Person
     {
 //        $preEvent = new PersonFromUserItemPreEvent($user, $full);
-//        $this->dispatcher->dispatch($preEvent, PersonFromUserItemPreEvent::NAME);
+//        $this->eventDispatcher->dispatch($preEvent, PersonFromUserItemPreEvent::NAME);
 //        $user = $preEvent->getUser();
 
         $identifier = $user->getFirstAttribute($this->identifierAttributeName) ?? '';
@@ -305,14 +300,14 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         }
 
         $postEvent = new PersonFromUserItemPostEvent($attributes, $person, $full);
-        $this->localDataAwareEventDispatcher->dispatch($postEvent, PersonFromUserItemPostEvent::NAME);
+        $this->eventDispatcher->dispatch($postEvent, PersonFromUserItemPostEvent::NAME);
 
         return $postEvent->getPerson();
     }
 
     public function getPerson(string $id, array $options = []): Person
     {
-        $this->localDataAwareEventDispatcher->initRequestedLocalDataAttributes(LocalData::getIncludeParameter($options));
+        $this->eventDispatcher->onNewOperation($options);
 
         // extract username in case $id is an iri, e.g. /base/people/{user}
         $parts = explode('/', $id);
@@ -353,7 +348,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
         if ($this->currentPerson) {
             if ($this->currentPerson->getIdentifier() === $currentIdentifier) {
-                if (!$checkLocalDataAttributes || $this->localDataAwareEventDispatcher->checkRequestedAttributesIdentitcal($this->currentPerson)) {
+                if (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($this->currentPerson)) {
                     return $this->currentPerson;
                 } else {
                     // cache a new instance of Person because the cached instance's local data attributes do not match the requested attributes

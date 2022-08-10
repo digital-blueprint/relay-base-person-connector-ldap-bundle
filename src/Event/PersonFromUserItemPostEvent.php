@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Event;
 
 use Dbp\Relay\BasePersonBundle\Entity\Person;
-use Dbp\Relay\CoreBundle\LocalData\LocalDataAwareEvent;
+use Dbp\Relay\CoreBundle\LocalData\LocalDataAwarePostEvent;
 
-class PersonFromUserItemPostEvent extends LocalDataAwareEvent
+class PersonFromUserItemPostEvent extends LocalDataAwarePostEvent
 {
     public const NAME = 'dbp.relay.base_person_connector_ldap_bundle.person_from_user_item.post';
 
