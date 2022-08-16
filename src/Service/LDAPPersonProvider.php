@@ -6,6 +6,7 @@ namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 
 use Dbp\Relay\BasePersonBundle\API\PersonProviderInterface;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
+use Dbp\Relay\CoreBundle\Exception\ApiError;
 
 class LDAPPersonProvider implements PersonProviderInterface
 {
@@ -18,15 +19,28 @@ class LDAPPersonProvider implements PersonProviderInterface
     }
 
     /**
-     * @param array $filters $filters['search'] can be a string to search for people (e.g. part of the name)
+     * @param array $options Available options:
+     *                       * Person::SEARCH_PARAMETER_NAME (whitespace separated list of search terms to perform a partial case-insensitive text search on person's full name)
+     *                       * LocalData::INCLUDE_PARAMETER_NAME
+     *                       * LocalData::QUERY_PARAMETER_NAME
+     *
+     * @throws ApiError
      *
      * @return Person[]
      */
-    public function getPersons(array $filters): array
+    public function getPersons(array $options): array
     {
-        return $this->ldapApi->getPersons($filters);
+        return $this->ldapApi->getPersons($options);
     }
 
+    /**
+     * Throws an HTTP_NOT_FOUND exception if no person with the given ID can be found.
+     *
+     * @param array $options Available options:
+     *                       * LocalData::INCLUDE_PARAMETER_NAME
+     *
+     * @throws ApiError
+     */
     public function getPerson(string $id, array $options = []): Person
     {
         return $this->ldapApi->getPerson($id, $options);
@@ -34,7 +48,9 @@ class LDAPPersonProvider implements PersonProviderInterface
 
     /**
      * Returns the Person matching the current user. Or null if there is no associated person
-     * like when the client is another server.
+     * like when the client is another server. Throws an HTTP_NOT_FOUND exception if no person is found for the current user.
+     *
+     * @throws ApiError
      */
     public function getCurrentPerson(): ?Person
     {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1262fab1c713ea8767e23bf5b9729efc",
+    "content-hash": "f9348007e76a9114cc35c21e3312c9b4",
     "packages": [
         {
             "name": "adldap2/adldap2",
@@ -347,15 +347,15 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.1",
+            "version": "v0.2.2",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-bundle",
-                "reference": "b304723071831c2e5e01ffbd254106fc868e825f"
+                "reference": "41add7e3408b9e3085c23ea770e07995480b9df3"
             },
             "require": {
                 "api-platform/core": "^2.6.3",
-                "dbp/relay-core-bundle": "^0.1.35",
+                "dbp/relay-core-bundle": "^0.1.38",
                 "ext-json": "*",
                 "guzzlehttp/guzzle": "^7.0",
                 "nelmio/cors-bundle": "^2.1.0",
@@ -392,15 +392,15 @@
             "license": [
                 "AGPL-3.0-or-later"
             ],
-            "time": "2022-05-02T07:24:36+00:00"
+            "time": "2022-08-16T11:01:05+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
-            "version": "dev-main",
+            "version": "v0.1.38",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-core-bundle",
-                "reference": "71f304347b8e970ed8d56934243a455b0bd6cfb1"
+                "reference": "d4686f81efdec53c082808c1c827c3d2912dabac"
             },
             "require": {
                 "api-platform/core": "^2.6.6",
@@ -445,7 +445,6 @@
                 "symfony/phpunit-bridge": "^5.3",
                 "vimeo/psalm": "^4.4"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "extra": {
                 "hooks": {
@@ -464,7 +463,7 @@
                 "AGPL-3.0-or-later"
             ],
             "description": "The core bundle of the Relay API gateway",
-            "time": "2022-08-15T00:28:21+00:00"
+            "time": "2022-08-16T08:35:41+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -11187,18 +11186,9 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "dbp/relay-core-bundle",
-            "version": "dev-main",
-            "alias": "0.1.37",
-            "alias_normalized": "0.1.37.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "dbp/relay-core-bundle": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -11210,5 +11200,5 @@
     "platform-overrides": {
         "php": "7.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

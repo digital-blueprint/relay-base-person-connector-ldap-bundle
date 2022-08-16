@@ -16,6 +16,7 @@ use Adldap\Models\User;
 use Adldap\Query\Builder;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
@@ -28,7 +29,6 @@ use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
 class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
@@ -194,6 +194,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         return $builder;
     }
 
+    /*
+     * @throws ApiError
+     */
     private function getPeopleUserItems(array $filters): array
     {
         try {
@@ -215,16 +218,23 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             return $search->sortBy($this->familyNameAttributeName, 'asc')->paginate($this->PAGESIZE)->getResults();
         } catch (\Adldap\Auth\BindException $e) {
             // There was an issue binding / connecting to the server.
-            throw new ApiError(Response::HTTP_BAD_GATEWAY, sprintf('People could not be loaded! Message: %s', CoreTools::filterErrorMessage($e->getMessage())));
+            throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY, sprintf('People could not be loaded! Message: %s', CoreTools::filterErrorMessage($e->getMessage())));
         }
     }
 
-    public function getPersons(array $filters): array
+    /*
+     * @throws ApiError
+     */
+    public function getPersons(array $options): array
     {
-        $this->eventDispatcher->onNewOperation($filters);
+        $this->eventDispatcher->onNewOperation($options);
+
+        $preEvent = new PersonPreEvent();
+        $this->eventDispatcher->dispatch($preEvent, PersonPreEvent::NAME);
+        $options = array_merge($options, $preEvent->getQueryParameters());
 
         $persons = [];
-        $items = $this->getPeopleUserItems($filters);
+        $items = $this->getPeopleUserItems($options);
         foreach ($items as $item) {
             $person = $this->personFromUserItem($item, false);
             $persons[] = $person;
@@ -233,6 +243,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         return $persons;
     }
 
+    /*
+     * @throws ApiError
+     */
     private function getPersonUserItem(string $identifier): User
     {
         $preEvent = new PersonUserItemPreEvent($identifier);
@@ -250,7 +263,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
                 ->first();
 
             if ($user === null) {
-                throw new NotFoundHttpException(sprintf("Person with id '%s' could not be found!", $identifier));
+                throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Person with id '%s' could not be found!", $identifier));
             }
 
             assert($identifier === $user->getFirstAttribute($this->identifierAttributeName));
@@ -259,7 +272,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             return $user;
         } catch (\Adldap\Auth\BindException $e) {
             // There was an issue binding / connecting to the server.
-            throw new ApiError(Response::HTTP_BAD_GATEWAY, sprintf("Person with id '%s' could not be loaded! Message: %s", $identifier, CoreTools::filterErrorMessage($e->getMessage())));
+            throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY, sprintf("Person with id '%s' could not be loaded! Message: %s", $identifier, CoreTools::filterErrorMessage($e->getMessage())));
         }
     }
 
@@ -305,6 +318,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         return $postEvent->getPerson();
     }
 
+    /**
+     * @thorws ApiError
+     */
     public function getPerson(string $id, array $options = []): Person
     {
         $this->eventDispatcher->onNewOperation($options);
@@ -334,7 +350,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     }
 
     /**
-     * @thorws NotFoundHttpException
+     * @thorws ApiError
      */
     private function getCurrentPersonCached(bool $checkLocalDataAttributes): ?Person
     {
@@ -371,7 +387,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             try {
                 $user = $this->getPersonUserItem($currentIdentifier);
                 $person = $this->personFromUserItem($user, true);
-            } catch (NotFoundHttpException $e) {
+            } catch (ApiError $exc) {
+                if ($exc->getStatusCode() !== Response::HTTP_NOT_FOUND) {
+                    throw $exc;
+                }
             }
             $item->set($person);
             $item->expiresAfter($cacheTTL);
@@ -381,12 +400,15 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->currentPerson = $person;
 
         if ($this->currentPerson === null) {
-            throw new NotFoundHttpException();
+            throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Current person with id '%s' could not be found!", $currentIdentifier));
         }
 
         return $this->currentPerson;
     }
 
+    /**
+     * @thorws ApiError
+     */
     public function getCurrentPerson(): ?Person
     {
         return $this->getCurrentPersonCached(false);
