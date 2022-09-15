@@ -25,8 +25,8 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('username')->end()
             ->scalarNode('password')->end()
             ->enumNode('encryption')
-                ->info('simple_tls uses port 636 and is sometimes referred to as "SSL", start_tls uses port 389 and is sometimes referred to as "TLS"')
-                ->values(['start_tls', 'simple_tls'])
+                ->info('simple_tls uses port 636 and is sometimes referred to as "SSL", start_tls uses port 389 and is sometimes referred to as "TLS", plain means none')
+                ->values(['start_tls', 'simple_tls', 'plain'])
                 ->defaultValue('start_tls')
             ->end()
             ->end();

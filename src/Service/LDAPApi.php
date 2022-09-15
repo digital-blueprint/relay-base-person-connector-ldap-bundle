@@ -96,10 +96,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         ];
 
         $encryption = $config['ldap']['encryption'];
-        assert(in_array($encryption, ['start_tls', 'simple_tls'], true));
+        assert(in_array($encryption, ['start_tls', 'simple_tls', 'plain'], true));
         $this->providerConfig['use_tls'] = ($encryption === 'start_tls');
         $this->providerConfig['use_ssl'] = ($encryption === 'simple_tls');
-        $this->providerConfig['port'] = ($encryption === 'start_tls') ? 389 : 636;
+        $this->providerConfig['port'] = ($encryption === 'start_tls' || $encryption === 'plain') ? 389 : 636;
     }
 
     public function checkConnection()
