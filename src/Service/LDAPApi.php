@@ -14,6 +14,7 @@ use Adldap\Connections\Provider;
 use Adldap\Connections\ProviderInterface;
 use Adldap\Models\User;
 use Adldap\Query\Builder;
+use Adldap\Query\Paginator as AdldapPaginator;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
@@ -22,6 +23,8 @@ use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataAwareEventDispatcher;
+use Dbp\Relay\CoreBundle\Pagination\Pagination;
+use Dbp\Relay\CoreBundle\Pagination\Paginator;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -34,8 +37,6 @@ use Symfony\Contracts\Service\ServiceSubscriberInterface;
 class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 {
     use LoggerAwareTrait;
-
-    private $PAGESIZE = 50;
 
     /** @var ProviderInterface|null */
     private $provider;
@@ -197,7 +198,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /*
      * @throws ApiError
      */
-    private function getPeopleUserItems(array $filters): array
+    private function getPeopleUserItems(array $options): AdldapPaginator
     {
         try {
             $provider = $this->getProvider();
@@ -206,8 +207,8 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $search = $builder
                 ->where('objectClass', '=', $provider->getSchema()->person());
 
-            if (isset($filters['search'])) {
-                $items = explode(' ', $filters['search']);
+            if (isset($options['search'])) {
+                $items = explode(' ', $options['search']);
 
                 // search for all substrings
                 foreach ($items as $item) {
@@ -215,7 +216,12 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
                 }
             }
 
-            return $search->sortBy($this->familyNameAttributeName, 'asc')->paginate($this->PAGESIZE)->getResults();
+            $maxNumItemsPerPage = Pagination::getMaxNumItemsPerPage($options);
+            // API platform's first page is 1, Adldap's first page is 0
+            $currentPageIndex = Pagination::getCurrentPageNumber($options) - 1;
+
+            return $search->sortBy($this->familyNameAttributeName, 'asc')
+                ->paginate($maxNumItemsPerPage, $currentPageIndex);
         } catch (\Adldap\Auth\BindException $e) {
             // There was an issue binding / connecting to the server.
             throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY, sprintf('People could not be loaded! Message: %s', CoreTools::filterErrorMessage($e->getMessage())));
@@ -225,7 +231,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /*
      * @throws ApiError
      */
-    public function getPersons(array $options): array
+    public function getPersons(array $options): Paginator
     {
         $this->eventDispatcher->onNewOperation($options);
 
@@ -234,13 +240,13 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $options = array_merge($options, $preEvent->getQueryParameters());
 
         $persons = [];
-        $items = $this->getPeopleUserItems($options);
-        foreach ($items as $item) {
-            $person = $this->personFromUserItem($item, false);
+        $paginator = $this->getPeopleUserItems($options);
+        foreach ($paginator as $userItem) {
+            $person = $this->personFromUserItem($userItem, false);
             $persons[] = $person;
         }
 
-        return $persons;
+        return Pagination::createFullPaginator($persons, $options, count($paginator));
     }
 
     /*

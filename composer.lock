@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9348007e76a9114cc35c21e3312c9b4",
+    "content-hash": "f6fe58d76950c7e09974a1a334ed2ad0",
     "packages": [
         {
             "name": "adldap2/adldap2",
@@ -354,11 +354,11 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.2",
+            "version": "v0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-bundle",
-                "reference": "41add7e3408b9e3085c23ea770e07995480b9df3"
+                "reference": "daf1d3dfa69891a07895c2416d75c62edc4aa98b"
             },
             "require": {
                 "api-platform/core": "^2.6.3",
@@ -399,7 +399,7 @@
             "license": [
                 "AGPL-3.0-or-later"
             ],
-            "time": "2022-08-16T11:01:05+00:00"
+            "time": "2022-09-20T07:22:42+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
@@ -11148,5 +11148,5 @@
     "platform-overrides": {
         "php": "7.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
