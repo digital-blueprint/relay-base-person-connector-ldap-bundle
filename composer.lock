@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f6fe58d76950c7e09974a1a334ed2ad0",
+    "content-hash": "67fd28bd001e3ecaf1cbf4da59460329",
     "packages": [
         {
             "name": "adldap2/adldap2",
@@ -354,7 +354,7 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.3.0",
+            "version": "v0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-bundle",
