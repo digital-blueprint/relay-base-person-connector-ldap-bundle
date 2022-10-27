@@ -246,7 +246,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $persons[] = $person;
         }
 
-        return Pagination::createFullPaginator($persons, $options, count($paginator));
+        return Pagination::createPartialPaginator($persons, $options);
     }
 
     /*
