@@ -23,8 +23,6 @@ use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataAwareEventDispatcher;
-use Dbp\Relay\CoreBundle\Pagination\Pagination;
-use Dbp\Relay\CoreBundle\Pagination\Paginator;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -198,7 +196,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /*
      * @throws ApiError
      */
-    private function getPeopleUserItems(array $options): AdldapPaginator
+    private function getPeopleUserItems(int $currentPageNumber, int $maxNumItemsPerPage, array $options): AdldapPaginator
     {
         try {
             $provider = $this->getProvider();
@@ -216,9 +214,8 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
                 }
             }
 
-            $maxNumItemsPerPage = Pagination::getMaxNumItemsPerPage($options);
             // API platform's first page is 1, Adldap's first page is 0
-            $currentPageIndex = Pagination::getCurrentPageNumber($options) - 1;
+            $currentPageIndex = $currentPageNumber - 1;
 
             return $search->sortBy($this->familyNameAttributeName, 'asc')
                 ->paginate($maxNumItemsPerPage, $currentPageIndex);
@@ -229,9 +226,11 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     }
 
     /*
+     * @return Person[]
+     *
      * @throws ApiError
      */
-    public function getPersons(array $options): Paginator
+    public function getPersons(int $currentPageNumber, int $maxNumItemsPerPage, array $options = []): array
     {
         $this->eventDispatcher->onNewOperation($options);
 
@@ -240,13 +239,12 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $options = array_merge($options, $preEvent->getQueryParameters());
 
         $persons = [];
-        $paginator = $this->getPeopleUserItems($options);
-        foreach ($paginator as $userItem) {
+        foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $options) as $userItem) {
             $person = $this->personFromUserItem($userItem, false);
             $persons[] = $person;
         }
 
-        return Pagination::createPartialPaginator($persons, $options);
+        return $persons;
     }
 
     /*

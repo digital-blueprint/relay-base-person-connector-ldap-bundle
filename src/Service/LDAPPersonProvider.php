@@ -7,7 +7,6 @@ namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 use Dbp\Relay\BasePersonBundle\API\PersonProviderInterface;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
-use Dbp\Relay\CoreBundle\Pagination\Paginator;
 
 class LDAPPersonProvider implements PersonProviderInterface
 {
@@ -25,11 +24,13 @@ class LDAPPersonProvider implements PersonProviderInterface
      *                       * LocalData::INCLUDE_PARAMETER_NAME
      *                       * LocalData::QUERY_PARAMETER_NAME
      *
+     * @return Person[]
+     *
      * @throws ApiError
      */
-    public function getPersons(array $options): Paginator
+    public function getPersons(int $currentPageNumber, int $maxNumItemsPerPage, array $options = []): array
     {
-        return $this->ldapApi->getPersons($options);
+        return $this->ldapApi->getPersons($currentPageNumber, $maxNumItemsPerPage, $options);
     }
 
     /**
