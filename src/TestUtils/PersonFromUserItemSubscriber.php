@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils;
 
-use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPostEvent;
-use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonFromUserItemPreEvent;
+use Dbp\Relay\BasePersonBundle\Event\PersonProviderPostEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class PersonFromUserItemSubscriber implements EventSubscriberInterface
@@ -13,22 +12,13 @@ class PersonFromUserItemSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            PersonFromUserItemPreEvent::NAME => 'onPre',
-            PersonFromUserItemPostEvent::NAME => 'onPost',
+            PersonProviderPostEvent::NAME => 'onPost',
         ];
     }
 
-    public function onPre(PersonFromUserItemPreEvent $event)
+    public function onPost(PersonProviderPostEvent $event)
     {
-        $user = $event->getUser();
-        $user->setCompany('TestCompany');
-        $event->setUser($user);
-    }
-
-    public function onPost(PersonFromUserItemPostEvent $event)
-    {
-        $person = $event->getPerson();
+        $person = $event->getEntity();
         $person->setExtraData('test', 'my-test-string');
-        $event->setPerson($person);
     }
 }
