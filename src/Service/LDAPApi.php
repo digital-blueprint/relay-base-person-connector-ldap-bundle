@@ -22,7 +22,7 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
-use Dbp\Relay\CoreBundle\LocalData\LocalDataAwareEventDispatcher;
+use Dbp\Relay\CoreBundle\LocalData\LocalDataEventDispatcher;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -66,7 +66,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     private $birthdayAttributeName;
 
-    /** @var LocalDataAwareEventDispatcher */
+    /** @var LocalDataEventDispatcher */
     private $eventDispatcher;
 
     public function __construct(ContainerInterface $locator, EventDispatcherInterface $dispatcher)
@@ -76,7 +76,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->currentPerson = null;
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
-        $this->eventDispatcher = new LocalDataAwareEventDispatcher(Person::class, $dispatcher);
+        $this->eventDispatcher = new LocalDataEventDispatcher(Person::class, $dispatcher);
     }
 
     public function setConfig(array $config)
@@ -312,10 +312,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             }
         }
 
-        $postEvent = new PersonProviderPostEvent($attributes, $person);
+        $postEvent = new PersonProviderPostEvent($person, $attributes);
         $this->eventDispatcher->dispatch($postEvent, PersonProviderPostEvent::NAME);
 
-        return $postEvent->getEntity();
+        return $person;
     }
 
     /**

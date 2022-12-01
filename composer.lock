@@ -348,11 +348,11 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.6",
+            "version": "v0.2.8",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-bundle",
-                "reference": "d0fbe7236914d9f5343366cd50d6903c41446758"
+                "reference": "8d145411476f522f867dbd7442f7a5fbd91e6f68"
             },
             "require": {
                 "api-platform/core": "^2.6.3",
@@ -393,15 +393,15 @@
             "license": [
                 "AGPL-3.0-or-later"
             ],
-            "time": "2022-11-24T08:50:01+00:00"
+            "time": "2022-11-30T12:35:39+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
-            "version": "v0.1.61",
+            "version": "v0.1.63",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-core-bundle",
-                "reference": "996fc7d43361720e3749401fd0f005ed3d97404b"
+                "reference": "3c696f31a84b65cec38a975d4adaf64e3bc2fdcb"
             },
             "require": {
                 "api-platform/core": "^2.6.8 <2.7.0",
@@ -465,7 +465,7 @@
                 "AGPL-3.0-or-later"
             ],
             "description": "The core bundle of the Relay API gateway",
-            "time": "2022-11-23T12:35:13+00:00"
+            "time": "2022-11-30T12:11:21+00:00"
         },
         {
             "name": "doctrine/annotations",

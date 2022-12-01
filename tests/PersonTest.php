@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tugraz\Relay\TugrazBundle\Tests;
+namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests;
 
 use Adldap\Connections\ConnectionInterface;
 use Adldap\Models\User as AdldapUser;

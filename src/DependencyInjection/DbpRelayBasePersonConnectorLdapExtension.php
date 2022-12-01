@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection;
 
+use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonPostEventSubscriber;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -30,10 +32,13 @@ class DbpRelayBasePersonConnectorLdapExtension extends ConfigurableExtension
         $personCacheDef->addTag('cache.pool');
 
         // Inject the config value into the UCardService service
-        $definition = $container->getDefinition('Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi');
+        $definition = $container->getDefinition(LDAPApi::class);
         $definition->addMethodCall('setConfig', [$mergedConfig]);
         $definition->addMethodCall('setLDAPCache', [$ldapCache, 360]);
         $definition->addMethodCall('setPersonCache', [$personCacheDef]);
+
+        $postEventSubscriber = $container->getDefinition(PersonPostEventSubscriber::class);
+        $postEventSubscriber->addMethodCall('setConfig', [$mergedConfig]);
     }
 
     private function extendArrayParameter(ContainerBuilder $container, string $parameter, array $values)

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils;
 
+use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonBundle\Event\PersonProviderPostEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -19,6 +20,8 @@ class PersonFromUserItemSubscriber implements EventSubscriberInterface
     public function onPost(PersonProviderPostEvent $event)
     {
         $person = $event->getEntity();
-        $person->setExtraData('test', 'my-test-string');
+        if ($person instanceof Person) {
+            $person->setExtraData('test', 'my-test-string');
+        }
     }
 }

@@ -4,5 +4,9 @@ services:
     autowire: true
     autoconfigure: true
 
+  Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonPostEventSubscriber:
+    autowire: true
+    autoconfigure: true
+
   Dbp\Relay\BasePersonBundle\API\PersonProviderInterface:
     '@Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider'

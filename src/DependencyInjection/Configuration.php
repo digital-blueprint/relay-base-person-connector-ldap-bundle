@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection;
 
+use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonPostEventSubscriber;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -20,29 +21,30 @@ class Configuration implements ConfigurationInterface
         $ldapBuilder = new TreeBuilder('ldap');
         $ldapNode = $ldapBuilder->getRootNode()
             ->children()
-            ->scalarNode('host')->end()
-            ->scalarNode('base_dn')->end()
-            ->scalarNode('username')->end()
-            ->scalarNode('password')->end()
-            ->enumNode('encryption')
-                ->info('simple_tls uses port 636 and is sometimes referred to as "SSL", start_tls uses port 389 and is sometimes referred to as "TLS", plain means none')
-                ->values(['start_tls', 'simple_tls', 'plain'])
-                ->defaultValue('start_tls')
-            ->end()
+                ->scalarNode('host')->end()
+                ->scalarNode('base_dn')->end()
+                ->scalarNode('username')->end()
+                ->scalarNode('password')->end()
+                ->enumNode('encryption')
+                    ->info('simple_tls uses port 636 and is sometimes referred to as "SSL", start_tls uses port 389 and is sometimes referred to as "TLS", plain means none')
+                    ->values(['start_tls', 'simple_tls', 'plain'])
+                    ->defaultValue('start_tls')
+                ->end()
             ->end();
 
         $attributesBuilder = new TreeBuilder('attributes');
         $attributesNode = $attributesBuilder->getRootNode()
             ->children()
-            ->scalarNode('identifier')->end()
-            ->scalarNode('given_name')->end()
-            ->scalarNode('family_name')->end()
-            ->scalarNode('email')->end()
-            ->scalarNode('birthday')->end()
+                ->scalarNode('identifier')->end()
+                ->scalarNode('given_name')->end()
+                ->scalarNode('family_name')->end()
+                ->scalarNode('email')->end()
+                ->scalarNode('birthday')->end()
             ->end();
-        $ldapNode->append($attributesNode);
 
+        $ldapNode->append($attributesNode);
         $rootNode->append($ldapNode);
+        $rootNode->append(PersonPostEventSubscriber::getConfigNode());
 
         return $treeBuilder;
     }
