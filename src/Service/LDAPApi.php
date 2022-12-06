@@ -16,7 +16,7 @@ use Adldap\Models\User;
 use Adldap\Query\Builder;
 use Adldap\Query\Paginator as AdldapPaginator;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
-use Dbp\Relay\BasePersonBundle\Event\PersonProviderPostEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
@@ -235,7 +235,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->eventDispatcher->onNewOperation($options);
 
         $preEvent = new PersonPreEvent();
-        $this->eventDispatcher->dispatch($preEvent, PersonPreEvent::NAME);
+        $this->eventDispatcher->dispatch($preEvent);
         $options = array_merge($options, $preEvent->getQueryParameters());
 
         $persons = [];
@@ -253,7 +253,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     private function getPersonUserItem(string $identifier): User
     {
         $preEvent = new PersonUserItemPreEvent($identifier);
-        $this->eventDispatcher->dispatch($preEvent, PersonUserItemPreEvent::NAME);
+        $this->eventDispatcher->dispatch($preEvent);
         $identifier = $preEvent->getIdentifier();
 
         try {
@@ -312,8 +312,8 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             }
         }
 
-        $postEvent = new PersonProviderPostEvent($person, $attributes);
-        $this->eventDispatcher->dispatch($postEvent, PersonProviderPostEvent::NAME);
+        $postEvent = new PersonPostEvent($person, $attributes);
+        $this->eventDispatcher->dispatch($postEvent);
 
         return $person;
     }

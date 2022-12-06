@@ -11,7 +11,7 @@ use Adldap\Query\Grammar;
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
-use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonFromUserItemSubscriber;
+use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonPostEventSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonUserItemSubscriber;
 use Mockery;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -31,7 +31,7 @@ class PersonTest extends ApiTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $personFromUserItemSubscriber = new PersonFromUserItemSubscriber();
+        $personFromUserItemSubscriber = new PersonPostEventSubscriber();
         $personUserItemSubscriber = new PersonUserItemSubscriber();
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addSubscriber($personFromUserItemSubscriber);

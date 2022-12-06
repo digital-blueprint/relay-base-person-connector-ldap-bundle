@@ -8,9 +8,8 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class PersonUserItemPreEvent extends Event
 {
-    public const NAME = 'dbp.relay.base_person_connector_ldap_bundle.person_user_item.pre';
-
-    protected $identifier;
+    /** @var string */
+    private $identifier;
 
     public function __construct(string $identifier)
     {

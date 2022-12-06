@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils;
 
 use Dbp\Relay\BasePersonBundle\Entity\Person;
-use Dbp\Relay\BasePersonBundle\Event\PersonProviderPostEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class PersonFromUserItemSubscriber implements EventSubscriberInterface
+class PersonPostEventSubscriber implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {
         return [
-            PersonProviderPostEvent::NAME => 'onPost',
+            PersonPostEvent::class => 'onPost',
         ];
     }
 
-    public function onPost(PersonProviderPostEvent $event)
+    public function onPost(PersonPostEvent $event)
     {
         $person = $event->getEntity();
         if ($person instanceof Person) {

@@ -12,7 +12,7 @@ class PersonUserItemSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            PersonUserItemPreEvent::NAME => 'onPre',
+            PersonUserItemPreEvent::class => 'onPre',
         ];
     }
 
