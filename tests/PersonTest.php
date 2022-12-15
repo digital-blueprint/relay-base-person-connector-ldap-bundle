@@ -106,4 +106,15 @@ class PersonTest extends ApiTestCase
 
         $this->assertEquals($person->getExtraData('test'), 'my-test-string');
     }
+
+    public function testPersonFromUserItemNoIdentifier()
+    {
+        $user = new AdldapUser([
+            'givenName' => ['givenName'],
+            'sn' => ['familyName'],
+        ], $this->newBuilder());
+
+        $person = $this->api->personFromUserItem($user, false);
+        $this->assertNull($person);
+    }
 }

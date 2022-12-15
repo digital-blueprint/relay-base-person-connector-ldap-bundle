@@ -241,6 +241,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $persons = [];
         foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $options) as $userItem) {
             $person = $this->personFromUserItem($userItem, false);
+            if ($person === null) {
+                continue;
+            }
             $persons[] = $person;
         }
 
@@ -280,9 +283,15 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         }
     }
 
-    public function personFromUserItem(User $user, bool $full): Person
+    /**
+     * Returns null in case the user is not a valid Person, for example if the identifier is missing.
+     */
+    public function personFromUserItem(User $user, bool $full): ?Person
     {
-        $identifier = $user->getFirstAttribute($this->identifierAttributeName) ?? '';
+        $identifier = $user->getFirstAttribute($this->identifierAttributeName);
+        if ($identifier === null) {
+            return null;
+        }
 
         $person = new Person();
         $person->setIdentifier($identifier);
@@ -339,6 +348,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         } else {
             $user = $this->getPersonUserItem($id);
             $person = $this->personFromUserItem($user, true);
+            if ($person === null) {
+                throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Person with id '%s' could not be found!", $id));
+            }
         }
 
         return $person;
