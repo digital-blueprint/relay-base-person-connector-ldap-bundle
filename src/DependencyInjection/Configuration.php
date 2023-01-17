@@ -44,7 +44,7 @@ class Configuration implements ConfigurationInterface
 
         $ldapNode->append($attributesNode);
         $rootNode->append($ldapNode);
-        $rootNode->append(PersonPostEventSubscriber::getConfigNode());
+        $rootNode->append(PersonPostEventSubscriber::getLocalDataMappingConfigNodeDefinition());
 
         return $treeBuilder;
     }
