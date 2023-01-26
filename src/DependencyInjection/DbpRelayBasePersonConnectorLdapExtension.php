@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection;
 
-use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonPostEventSubscriber;
+use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Config\FileLocator;
@@ -37,7 +37,7 @@ class DbpRelayBasePersonConnectorLdapExtension extends ConfigurableExtension
         $definition->addMethodCall('setLDAPCache', [$ldapCache, 360]);
         $definition->addMethodCall('setPersonCache', [$personCacheDef]);
 
-        $postEventSubscriber = $container->getDefinition(PersonPostEventSubscriber::class);
+        $postEventSubscriber = $container->getDefinition(PersonEventSubscriber::class);
         $postEventSubscriber->addMethodCall('setConfig', [$mergedConfig]);
     }
 

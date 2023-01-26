@@ -36,6 +36,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 {
     use LoggerAwareTrait;
 
+    public const SEARCH_OPTION = 'search';
+    public const FILTERS_OPTION = 'filters';
+
     /** @var ProviderInterface|null */
     private $provider;
 
@@ -203,14 +206,20 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $builder = $this->getCachedBuilder($provider);
 
             $search = $builder
-                ->where('objectClass', '=', $provider->getSchema()->person());
+                ->whereEquals('objectClass', $provider->getSchema()->person());
 
-            if (isset($options['search'])) {
-                $items = explode(' ', $options['search']);
+            if (($searchOption = $options[self::SEARCH_OPTION] ?? null) !== null) {
+                $items = explode(' ', $searchOption);
 
                 // search for all substrings
                 foreach ($items as $item) {
                     $search->whereContains('fullName', $item);
+                }
+            }
+
+            if (($filtersOption = $options[self::FILTERS_OPTION] ?? null) !== null) {
+                foreach ($filtersOption as $fieldName => $fieldValue) {
+                    $search->whereContains($fieldName, $fieldValue);
                 }
             }
 
@@ -226,6 +235,11 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     }
 
     /*
+     * @param array $options    Available options are:
+     *                          * LDAPApi::SEARCH_OPTION (string) Return all persons whose full name contains the given whitespace separated list of strings
+     *                          * LDAPApi::FILTERS_OPTIONS (array) Return all persons, where the given field names (array keys) contain the given field values (array values). Multiple filters are combined with a logical 'and'.
+     *                              E.g. [ 'some-attribute' => 'some-value', .... ]
+     *
      * @return Person[]
      *
      * @throws ApiError
@@ -265,7 +279,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
             /** @var User $user */
             $user = $builder
-                ->where('objectClass', '=', $provider->getSchema()->person())
+                ->whereEquals('objectClass', $provider->getSchema()->person())
                 ->whereEquals($this->identifierAttributeName, $identifier)
                 ->first();
 

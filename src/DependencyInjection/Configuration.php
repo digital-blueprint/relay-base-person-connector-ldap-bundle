@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection;
 
-use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonPostEventSubscriber;
+use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -44,7 +44,7 @@ class Configuration implements ConfigurationInterface
 
         $ldapNode->append($attributesNode);
         $rootNode->append($ldapNode);
-        $rootNode->append(PersonPostEventSubscriber::getLocalDataMappingConfigNodeDefinition());
+        $rootNode->append(PersonEventSubscriber::getLocalDataMappingConfigNodeDefinition());
 
         return $treeBuilder;
     }

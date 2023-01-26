@@ -4,7 +4,7 @@ services:
     autowire: true
     autoconfigure: true
 
-  Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonPostEventSubscriber:
+  Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber:
     autowire: true
     autoconfigure: true
 
