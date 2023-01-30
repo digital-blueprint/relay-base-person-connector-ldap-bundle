@@ -250,7 +250,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
         $preEvent = new PersonPreEvent();
         $this->eventDispatcher->dispatch($preEvent);
-        $options = array_merge($options, $preEvent->getQueryParameters());
+        $options[self::FILTERS_OPTION] = array_merge($options[self::FILTERS_OPTION] ?? [], $preEvent->getQueryParametersOut());
 
         $persons = [];
         foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $options) as $userItem) {
