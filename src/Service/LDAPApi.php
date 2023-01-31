@@ -213,6 +213,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
                 // search for all substrings
                 foreach ($items as $item) {
+                    if ($item === '') {
+                        // empty values are not allowed by ldap
+                        continue;
+                    }
                     $search->whereContains('fullName', $item);
                 }
             }
