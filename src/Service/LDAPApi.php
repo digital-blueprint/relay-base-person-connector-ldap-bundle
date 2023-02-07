@@ -14,6 +14,7 @@ use Adldap\Connections\Provider;
 use Adldap\Connections\ProviderInterface;
 use Adldap\Models\User;
 use Adldap\Query\Builder;
+use Adldap\Query\Operator;
 use Adldap\Query\Paginator as AdldapPaginator;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
@@ -38,6 +39,16 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public const SEARCH_OPTION = 'search';
     public const FILTERS_OPTION = 'filters';
+
+    public const CONTAINS_CI_FILTER_OPERATOR = 'contains_ci';
+    public const AND_LOGICAL_OPERATOR = 'and';
+    public const OR_LOGICAL_OPERATOR = 'or';
+
+    private const FILTER_ATTRIBUTE_OPERATOR = 'operator';
+    private const FILTER_ATTRIBUTE_FILTER_VALUE = 'filterValue';
+    private const FILTER_ATTRIBUTE_LOGICAL_OPERATOR = 'logical';
+
+    private const FULL_NAME_ATTRIBUTE_NAME = 'fullName';
 
     /** @var ProviderInterface|null */
     private $provider;
@@ -71,6 +82,48 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     /** @var LocalDataEventDispatcher */
     private $eventDispatcher;
+
+    public static function addFilter(array &$targetOptions, string $fieldName, string $filterOperator, $filterValue, string $logicalOperator = self::AND_LOGICAL_OPERATOR)
+    {
+        if ($fieldName === '' || $filterOperator === '' || $filterValue === '' || $logicalOperator === '') {
+            throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'invalid filter');
+        }
+
+        if (isset($targetOptions[self::FILTERS_OPTION]) === false) {
+            $targetOptions[self::FILTERS_OPTION] = [];
+        }
+        if (isset($targetOptions[self::FILTERS_OPTION][$fieldName]) === false) {
+            $targetOptions[self::FILTERS_OPTION][$fieldName] = [];
+        }
+
+        $targetOptions[self::FILTERS_OPTION][$fieldName][] = [
+            self::FILTER_ATTRIBUTE_OPERATOR => $filterOperator,
+            self::FILTER_ATTRIBUTE_FILTER_VALUE => $filterValue,
+            self::FILTER_ATTRIBUTE_LOGICAL_OPERATOR => $logicalOperator,
+        ];
+    }
+
+    private static function toAdldapFilterOperator(string $filterOperator): string
+    {
+        switch ($filterOperator) {
+            case self::CONTAINS_CI_FILTER_OPERATOR:
+                return Operator::$contains;
+                default:
+                    throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'unsupported filter operator: '.$filterOperator);
+        }
+    }
+
+    private static function toAdldapLogicalOperator(string $logicalOperator): string
+    {
+        switch ($logicalOperator) {
+            case self::AND_LOGICAL_OPERATOR:
+                return 'and';
+            case self::OR_LOGICAL_OPERATOR:
+                return 'or';
+            default:
+                throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'unsupported logical operator: '.$logicalOperator);
+        }
+    }
 
     public function __construct(ContainerInterface $locator, EventDispatcherInterface $dispatcher)
     {
@@ -133,6 +186,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $this->familyNameAttributeName,
             $this->emailAttributeName,
             $this->birthdayAttributeName,
+            self::FULL_NAME_ATTRIBUTE_NAME,
         ];
 
         $missing = [];
@@ -208,22 +262,14 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $search = $builder
                 ->whereEquals('objectClass', $provider->getSchema()->person());
 
-            if (($searchOption = $options[self::SEARCH_OPTION] ?? null) !== null) {
-                $items = explode(' ', $searchOption);
-
-                // search for all substrings
-                foreach ($items as $item) {
-                    if ($item === '') {
-                        // empty values are not allowed by ldap
-                        continue;
+            if ($filtersOption = $options[self::FILTERS_OPTION] ?? null) {
+                foreach ($filtersOption as $fieldName => $filters) {
+                    foreach ($filters as $filter) {
+                        $search->where($fieldName,
+                            self::toAdldapFilterOperator($filter[self::FILTER_ATTRIBUTE_OPERATOR]),
+                            $filter[self::FILTER_ATTRIBUTE_FILTER_VALUE],
+                            self::toAdldapLogicalOperator($filter[self::FILTER_ATTRIBUTE_LOGICAL_OPERATOR]));
                     }
-                    $search->whereContains('fullName', $item);
-                }
-            }
-
-            if (($filtersOption = $options[self::FILTERS_OPTION] ?? null) !== null) {
-                foreach ($filtersOption as $fieldName => $fieldValue) {
-                    $search->whereContains($fieldName, $fieldValue);
                 }
             }
 
@@ -240,9 +286,8 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     /*
      * @param array $options    Available options are:
-     *                          * LDAPApi::SEARCH_OPTION (string) Return all persons whose full name contains the given whitespace separated list of strings
-     *                          * LDAPApi::FILTERS_OPTIONS (array) Return all persons, where the given field names (array keys) contain the given field values (array values). Multiple filters are combined with a logical 'and'.
-     *                              E.g. [ 'some-attribute' => 'some-value', .... ]
+     *                          * LDAPApi::SEARCH_OPTION (string) Return all persons whose full name contains (case-insensitive) all substrings of the given string (whitespace separated).
+     *                          * LDAPApi::FILTERS_OPTIONS (array) Return all persons that pass the given filters. Use LDAPApi::addFilter to add filters.
      *
      * @return Person[]
      *
@@ -252,9 +297,16 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     {
         $this->eventDispatcher->onNewOperation($options);
 
-        $preEvent = new PersonPreEvent();
+        $preEvent = new PersonPreEvent($options);
         $this->eventDispatcher->dispatch($preEvent);
-        $options[self::FILTERS_OPTION] = array_merge($options[self::FILTERS_OPTION] ?? [], $preEvent->getQueryParametersOut());
+        $options = $preEvent->getOptions();
+
+        if (($searchOption = $options[self::SEARCH_OPTION] ?? null) && $searchOption !== '') {
+            // full name MUST contain  ALL substrings of search term
+            foreach (explode(' ', $searchOption) as $searchTermPart) {
+                self::addFilter($options, self::FULL_NAME_ATTRIBUTE_NAME, self::CONTAINS_CI_FILTER_OPERATOR, $searchTermPart);
+            }
+        }
 
         $persons = [];
         foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $options) as $userItem) {
