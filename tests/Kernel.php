@@ -11,6 +11,7 @@ use Dbp\Relay\CoreBundle\DbpRelayCoreBundle;
 use Nelmio\CorsBundle\NelmioCorsBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Bundle\MonologBundle\MonologBundle;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -25,6 +26,7 @@ class Kernel extends BaseKernel
     {
         yield new FrameworkBundle();
         yield new ApiPlatformBundle();
+        yield new MonologBundle();
         yield new DbpRelayBasePersonBundle();
         yield new DbpRelayCoreBundle();
         yield new DbpRelayBasePersonConnectorLdapBundle();
