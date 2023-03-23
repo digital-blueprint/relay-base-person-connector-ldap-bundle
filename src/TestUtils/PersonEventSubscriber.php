@@ -8,7 +8,7 @@ use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class PersonPostEventSubscriber implements EventSubscriberInterface
+class PersonEventSubscriber implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {
