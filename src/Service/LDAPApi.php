@@ -23,6 +23,7 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
+use Dbp\Relay\CoreBundle\LocalData\LocalData;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataEventDispatcher;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
@@ -451,16 +452,10 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             return null;
         }
 
-        $forceCreation = false;
-
         if ($this->currentPerson) {
-            if ($this->currentPerson->getIdentifier() === $currentIdentifier) {
-                if (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($this->currentPerson)) {
-                    return $this->currentPerson;
-                } else {
-                    // cache a new instance of Person because the cached instance's local data attributes do not match the requested attributes
-                    $forceCreation = true;
-                }
+            if ($this->currentPerson->getIdentifier() === $currentIdentifier &&
+                (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($this->currentPerson))) {
+                return $this->currentPerson;
             }
             $this->currentPerson = null;
         }
@@ -472,9 +467,14 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $person = null;
 
         $item = $cache->getItem($cacheKey);
-        if (!$forceCreation && $item->isHit()) {
-            $person = $item->get();
-        } else {
+        if ($item->isHit()) {
+            $cachedPerson = $item->get();
+            if (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($cachedPerson)) {
+                $person = $cachedPerson;
+            }
+        }
+
+        if ($person === null) {
             try {
                 $user = $this->getPersonUserItem($currentIdentifier);
                 $person = $this->personFromUserItem($user);
@@ -504,7 +504,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     {
         $this->eventDispatcher->onNewOperation($options);
 
-        return $this->getCurrentPersonCached(true);
+        return $this->getCurrentPersonCached(count($options[LocalData::LOCAL_DATA_ATTRIBUTES] ?? []) > 0);
     }
 
     public static function getSubscribedServices(): array
