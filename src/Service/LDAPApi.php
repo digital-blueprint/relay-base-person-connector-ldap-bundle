@@ -76,6 +76,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     private $familyNameAttributeName;
 
+    /** @deprecated */
     private $emailAttributeName;
 
     private $birthdayAttributeName;
@@ -217,6 +218,14 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->personCache = $cachePool;
     }
 
+    /**
+     * For unit testing only.
+     */
+    public function getEventDispatcher(): LocalDataEventDispatcher
+    {
+        return $this->eventDispatcher;
+    }
+
     private function getProvider(): ProviderInterface
     {
         if ($this->logger !== null) {
@@ -310,7 +319,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
         $persons = [];
         foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $options) as $userItem) {
-            $person = $this->personFromUserItem($userItem, false);
+            $person = $this->personFromUserItem($userItem);
             if ($person === null) {
                 continue;
             }
@@ -356,7 +365,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /**
      * Returns null in case the user is not a valid Person, for example if the identifier is missing.
      */
-    public function personFromUserItem(User $user, bool $full): ?Person
+    public function personFromUserItem(User $user): ?Person
     {
         $identifier = $user->getFirstAttribute($this->identifierAttributeName);
         if ($identifier === null) {
@@ -372,21 +381,21 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $person->setEmail($user->getFirstAttribute($this->emailAttributeName) ?? '');
         }
 
-        $birthDateString = $this->birthdayAttributeName !== '' ?
-            trim($user->getFirstAttribute($this->birthdayAttributeName) ?? '') : '';
-
-        if ($birthDateString !== '') {
-            $matches = [];
-
-            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $birthDateString, $matches)) {
-                $person->setBirthDate("{$matches[1]}-{$matches[2]}-{$matches[3]}");
-            }
-        }
-
-        // Remove all value with numeric keys
         $attributes = [];
         foreach ($user->getAttributes() as $key => $value) {
+            // Remove all values with numeric keys
             if (!is_numeric($key)) {
+                if ($this->birthdayAttributeName !== '' && $key === $this->birthdayAttributeName) {
+                    $birthDateString = trim($user->getFirstAttribute($this->birthdayAttributeName) ?? '');
+
+                    $matches = [];
+                    if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $birthDateString, $matches)) {
+                        $value = "{$matches[1]}-{$matches[2]}-{$matches[3]}";
+                    }
+
+                    $person->setBirthDate($value);
+                }
+
                 $attributes[$key] = $value;
             }
         }
@@ -417,7 +426,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             assert($person !== null);
         } else {
             $user = $this->getPersonUserItem($id);
-            $person = $this->personFromUserItem($user, true);
+            $person = $this->personFromUserItem($user);
             if ($person === null) {
                 throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Person with id '%s' could not be found!", $id));
             }
@@ -468,7 +477,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         } else {
             try {
                 $user = $this->getPersonUserItem($currentIdentifier);
-                $person = $this->personFromUserItem($user, true);
+                $person = $this->personFromUserItem($user);
             } catch (ApiError $exc) {
                 if ($exc->getStatusCode() !== Response::HTTP_NOT_FOUND) {
                     throw $exc;

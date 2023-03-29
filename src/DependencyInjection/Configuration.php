@@ -38,8 +38,10 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('identifier')->end()
                 ->scalarNode('given_name')->end()
                 ->scalarNode('family_name')->end()
-                ->scalarNode('email')->end()
-                ->scalarNode('birthday')->end()
+                ->scalarNode('email')->setDeprecated('dbp/relay-base-person-bundle', '0.2.14', 'The \'email\' attribute was removed from BasePerson resource. Use the local data mechanism to request a person\'s email')->end()
+                ->scalarNode('birthday')
+                  ->info('if the birthdate LDAP attribute name is specified here, its value is formatted to match the pattern \'YYYY-MM-DD\'')
+                ->end()
             ->end();
 
         $ldapNode->append($attributesNode);

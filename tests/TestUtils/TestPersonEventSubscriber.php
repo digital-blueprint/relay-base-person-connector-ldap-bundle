@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils;
+namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils;
 
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class PersonEventSubscriber implements EventSubscriberInterface
+class TestPersonEventSubscriber implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {
@@ -21,7 +21,7 @@ class PersonEventSubscriber implements EventSubscriberInterface
     {
         $person = $event->getEntity();
         if ($person instanceof Person) {
-            $person->setExtraData('test', 'my-test-string');
+            $person->setLocalDataValue('test', 'my-test-string');
         }
     }
 }

@@ -9,19 +9,23 @@ use Adldap\Models\User as AdldapUser;
 use Adldap\Query\Builder;
 use Adldap\Query\Grammar;
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
+use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
-use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonEventSubscriber;
-use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\PersonUserItemSubscriber;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils\TestPersonEventSubscriber;
+use Dbp\Relay\CoreBundle\LocalData\LocalData;
 use Mockery;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class PersonTest extends ApiTestCase
 {
+    private const EMAIL_ATTRIBUTE_NAME = 'email';
+    private const BIRTHDATE_ATTRIBUTE_NAME = 'birthDate';
+
     /**
      * @var LDAPApi
      */
-    private $api;
+    private $ldapApi;
 
     /**
      * @var LDAPPersonProvider
@@ -31,14 +35,17 @@ class PersonTest extends ApiTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $personFromUserItemSubscriber = new PersonEventSubscriber();
-        $personUserItemSubscriber = new PersonUserItemSubscriber();
-        $eventDispatcher = new EventDispatcher();
-        $eventDispatcher->addSubscriber($personFromUserItemSubscriber);
-        $eventDispatcher->addSubscriber($personUserItemSubscriber);
 
-        $this->api = new LDAPApi(self::createClient()->getContainer(), $eventDispatcher);
-        $this->api->setConfig([
+        $customPersonEventSubscriber = new TestPersonEventSubscriber();
+        $localDataEventSubscriber = new PersonEventSubscriber();
+        $localDataEventSubscriber->setConfig(self::createLocalDataMappingConfig());
+
+        $eventDispatcher = new EventDispatcher();
+        $eventDispatcher->addSubscriber($customPersonEventSubscriber);
+        $eventDispatcher->addSubscriber($localDataEventSubscriber);
+
+        $this->ldapApi = new LDAPApi(self::createClient()->getContainer(), $eventDispatcher);
+        $this->ldapApi->setConfig([
             'ldap' => [
                 'encryption' => 'simple_tls',
                 'attributes' => [
@@ -48,7 +55,7 @@ class PersonTest extends ApiTestCase
             ],
         ]);
 
-        $this->provider = new LDAPPersonProvider($this->api);
+        $this->provider = new LDAPPersonProvider($this->ldapApi);
     }
 
     public function testBasic()
@@ -72,13 +79,17 @@ class PersonTest extends ApiTestCase
             'sn' => ['Doe'],
         ], $this->newBuilder());
 
-        $person = $this->api->personFromUserItem($user, false);
+        $person = $this->ldapApi->personFromUserItem($user);
         $this->assertEquals('John', $person->getGivenName());
         $this->assertEquals('Doe', $person->getFamilyName());
     }
 
     public function testBirthDateParsing()
     {
+        $options = [];
+        LocalData::requestLocalDataAttributes($options, [self::BIRTHDATE_ATTRIBUTE_NAME]);
+        $this->ldapApi->getEventDispatcher()->onNewOperation($options);
+
         $variants = ['1994-06-24', '1994-06-24 00:00:00'];
         foreach ($variants as $variant) {
             $user = new AdldapUser([
@@ -88,13 +99,30 @@ class PersonTest extends ApiTestCase
                 'sn' => ['familyName'],
             ], $this->newBuilder());
 
-            $person = $this->api->personFromUserItem($user, false);
-            $this->assertNotNull($person->getBirthDate());
-            $this->assertEquals('1994-06-24', $person->getBirthDate());
+            $person = $this->ldapApi->personFromUserItem($user);
+            $this->assertEquals('1994-06-24', $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
         }
     }
 
-    public function testPersonFromUserItemPostEvent()
+    public function testLocalDataAttributeEmail()
+    {
+        $options = [];
+        LocalData::requestLocalDataAttributes($options, [self::EMAIL_ATTRIBUTE_NAME]);
+        $this->ldapApi->getEventDispatcher()->onNewOperation($options);
+
+        $EMAIL = 'john@doe.com';
+        $user = new AdldapUser([
+            'cn' => ['johndoe'],
+            'givenName' => ['John'],
+            'sn' => ['Doe'],
+            'email' => [$EMAIL],
+        ], $this->newBuilder());
+
+        $person = $this->ldapApi->personFromUserItem($user);
+        $this->assertEquals([$EMAIL], $person->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
+    }
+
+    public function testCustomPostEventSubscriber()
     {
         $user = new AdldapUser([
             'cn' => ['foobar'],
@@ -102,9 +130,9 @@ class PersonTest extends ApiTestCase
             'sn' => ['familyName'],
         ], $this->newBuilder());
 
-        $person = $this->api->personFromUserItem($user, false);
+        $person = $this->ldapApi->personFromUserItem($user);
 
-        $this->assertEquals($person->getExtraData('test'), 'my-test-string');
+        $this->assertEquals('my-test-string', $person->getLocalDataValue('test'));
     }
 
     public function testPersonFromUserItemNoIdentifier()
@@ -114,7 +142,26 @@ class PersonTest extends ApiTestCase
             'sn' => ['familyName'],
         ], $this->newBuilder());
 
-        $person = $this->api->personFromUserItem($user, false);
+        $person = $this->ldapApi->personFromUserItem($user);
         $this->assertNull($person);
+    }
+
+    private static function createLocalDataMappingConfig(): array
+    {
+        $config = [];
+        $config['local_data_mapping'] = [
+            [
+                'local_data_attribute' => self::EMAIL_ATTRIBUTE_NAME,
+                'source_attribute' => self::EMAIL_ATTRIBUTE_NAME,
+                'default_value' => '',
+            ],
+            [
+                'local_data_attribute' => self::BIRTHDATE_ATTRIBUTE_NAME,
+                'source_attribute' => 'dateofbirth',
+                'default_value' => '',
+            ],
+        ];
+
+        return $config;
     }
 }

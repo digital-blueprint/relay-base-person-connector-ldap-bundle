@@ -358,11 +358,11 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.13",
+            "version": "v0.2.14",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-bundle",
-                "reference": "76dc3cf7a4ef16cee037739e0c612f63c29ef580"
+                "reference": "2848187b29ac294fb5dcc65d53d2dc3ebc7252d5"
             },
             "require": {
                 "api-platform/core": "^2.6.3",
@@ -403,7 +403,7 @@
             "license": [
                 "AGPL-3.0-or-later"
             ],
-            "time": "2023-03-23T09:35:04+00:00"
+            "time": "2023-03-29T06:57:36+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
@@ -11223,5 +11223,5 @@
     "platform-overrides": {
         "php": "7.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
