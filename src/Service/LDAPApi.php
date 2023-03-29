@@ -500,9 +500,11 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /**
      * @thorws ApiError
      */
-    public function getCurrentPerson(): ?Person
+    public function getCurrentPerson(array $options): ?Person
     {
-        return $this->getCurrentPersonCached(false);
+        $this->eventDispatcher->onNewOperation($options);
+
+        return $this->getCurrentPersonCached(true);
     }
 
     public static function getSubscribedServices(): array
