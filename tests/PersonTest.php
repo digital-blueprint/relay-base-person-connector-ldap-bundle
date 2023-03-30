@@ -84,24 +84,22 @@ class PersonTest extends ApiTestCase
         $this->assertEquals('Doe', $person->getFamilyName());
     }
 
-    public function testBirthDateParsing()
+    public function testLocalDataAttributeBirthDate()
     {
         $options = [];
         LocalData::requestLocalDataAttributes($options, [self::BIRTHDATE_ATTRIBUTE_NAME]);
         $this->ldapApi->getEventDispatcher()->onNewOperation($options);
 
-        $variants = ['1994-06-24', '1994-06-24 00:00:00'];
-        foreach ($variants as $variant) {
-            $user = new AdldapUser([
-                'cn' => ['foobar'],
-                'dateofbirth' => [$variant],
-                'givenName' => ['givenName'],
-                'sn' => ['familyName'],
-            ], $this->newBuilder());
+        $user = new AdldapUser([
+            'cn' => ['foobar'],
+            'dateofbirth' => ['1994-06-24 00:00:00'],
+            'givenName' => ['givenName'],
+            'sn' => ['familyName'],
+        ], $this->newBuilder());
 
-            $person = $this->ldapApi->personFromUserItem($user);
-            $this->assertEquals('1994-06-24', $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
-        }
+        $person = $this->ldapApi->personFromUserItem($user);
+        $this->assertEquals('1994-06-24', $person->getBirthDate());
+        $this->assertEquals('1994-06-24 00:00:00', $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
     }
 
     public function testLocalDataAttributeEmail()
@@ -119,7 +117,7 @@ class PersonTest extends ApiTestCase
         ], $this->newBuilder());
 
         $person = $this->ldapApi->personFromUserItem($user);
-        $this->assertEquals([$EMAIL], $person->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
+        $this->assertEquals($EMAIL, $person->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
     }
 
     public function testCustomPostEventSubscriber()

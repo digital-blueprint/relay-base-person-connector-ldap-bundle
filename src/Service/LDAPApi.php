@@ -65,25 +65,32 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /** @var Person|null */
     private $currentPerson;
 
+    /** @var array|null */
     private $providerConfig;
 
+    /** @var string */
     private $deploymentEnv;
 
+    /** @var ContainerInterface */
     private $locator;
 
+    /** @var string */
     private $identifierAttributeName;
 
+    /** @var string */
     private $givenNameAttributeName;
 
+    /** @var string */
     private $familyNameAttributeName;
+
+    /** @var LocalDataEventDispatcher */
+    private $eventDispatcher;
 
     /** @deprecated */
     private $emailAttributeName;
 
+    /** @deprecated */
     private $birthdayAttributeName;
-
-    /** @var LocalDataEventDispatcher */
-    private $eventDispatcher;
 
     public static function addFilter(array &$targetOptions, string $fieldName, string $filterOperator, $filterValue, string $logicalOperator = self::AND_LOGICAL_OPERATOR)
     {
@@ -382,24 +389,20 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $person->setEmail($user->getFirstAttribute($this->emailAttributeName) ?? '');
         }
 
-        $attributes = [];
-        foreach ($user->getAttributes() as $key => $value) {
-            // Remove all values with numeric keys
-            if (!is_numeric($key)) {
-                if ($this->birthdayAttributeName !== '' && $key === $this->birthdayAttributeName) {
-                    $birthDateString = trim($user->getFirstAttribute($this->birthdayAttributeName) ?? '');
+        if ($this->birthdayAttributeName !== '') {
+            $birthDateString = trim($user->getFirstAttribute($this->birthdayAttributeName) ?? '');
 
-                    $matches = [];
-                    if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $birthDateString, $matches)) {
-                        $value = "{$matches[1]}-{$matches[2]}-{$matches[3]}";
-                    }
-
-                    $person->setBirthDate($value);
-                }
-
-                $attributes[$key] = $value;
+            $matches = [];
+            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $birthDateString, $matches)) {
+                $birthDateString = "{$matches[1]}-{$matches[2]}-{$matches[3]}";
             }
+            $person->setBirthDate($birthDateString);
         }
+
+        // Remove all values with numeric keys
+        $attributes = array_filter($user->getAttributes(), function ($key) {
+            return !is_numeric($key);
+        }, ARRAY_FILTER_USE_KEY);
 
         $postEvent = new PersonPostEvent($person, $attributes);
         $this->eventDispatcher->dispatch($postEvent);
