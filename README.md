@@ -1,6 +1,6 @@
  # DbpRelayBasePersonConnectorLdapBundle
 
-[GitLab](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle) | [Packagist](https://packagist.org/packages/dbp/relay-base-person-connector-ldap-bundle)
+[GitHub](https://github.com/digital-blueprint/relay-base-person-connector-ldap-bundle) | [Packagist](https://packagist.org/packages/dbp/relay-base-person-connector-ldap-bundle)
 
 This Symfony bundle contains LDAPPersonProvider services for the DBP Relay project.
 
@@ -9,9 +9,6 @@ This Symfony bundle contains LDAPPersonProvider services for the DBP Relay proje
 * Add the bundle package as a dependency:
 
 ```bash
-# You may want to first add the DBP Symfony recipe repository to your application to get the configuration file installed automatically
-# See: https://github.com/digital-blueprint/symfony-recipes
-# You can also use https://gitlab.tugraz.at/dbp/relay/dbp-relay-server-template as a template application, it has the repository included
 composer require dbp/relay-base-person-connector-ldap-bundle
 ```
 
