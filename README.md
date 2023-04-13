@@ -2,6 +2,8 @@
 
 [GitHub](https://github.com/digital-blueprint/relay-base-person-connector-ldap-bundle) | [Packagist](https://packagist.org/packages/dbp/relay-base-person-connector-ldap-bundle)
 
+[![Test](https://github.com/digital-blueprint/relay-base-person-connector-ldap-bundle/actions/workflows/test.yml/badge.svg)](https://github.com/digital-blueprint/relay-base-person-connector-ldap-bundle/actions/workflows/test.yml)
+
 This Symfony bundle contains LDAPPersonProvider services for the DBP Relay project.
 
 ## Integration into the API Server
