@@ -38,12 +38,6 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('identifier')->end()
                 ->scalarNode('given_name')->end()
                 ->scalarNode('family_name')->end()
-                ->scalarNode('email')
-                  ->setDeprecated('dbp/relay-base-person-bundle', '0.2.14', 'The \'email\' attribute was removed from BasePerson resource. Use the local data mechanism to request a person\'s email')
-                 ->end()
-                ->scalarNode('birthday')
-                  ->setDeprecated('dbp/relay-base-person-bundle', '0.2.14', 'The \'email\' attribute was removed from BasePerson resource. Use the local data mechanism to request a person\'s email')
-                ->end()
             ->end();
 
         $ldapNode->append($attributesNode);

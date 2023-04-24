@@ -86,12 +86,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /** @var LocalDataEventDispatcher */
     private $eventDispatcher;
 
-    /** @deprecated */
-    private $emailAttributeName;
-
-    /** @deprecated */
-    private $birthdayAttributeName;
-
     public static function addFilter(array &$targetOptions, string $fieldName, string $filterOperator, $filterValue, string $logicalOperator = self::AND_LOGICAL_OPERATOR)
     {
         if ($fieldName === '' || $filterOperator === '' || $filterValue === '' || $logicalOperator === '') {
@@ -149,8 +143,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->identifierAttributeName = $config['ldap']['attributes']['identifier'] ?? 'cn';
         $this->givenNameAttributeName = $config['ldap']['attributes']['given_name'] ?? 'givenName';
         $this->familyNameAttributeName = $config['ldap']['attributes']['family_name'] ?? 'sn';
-        $this->emailAttributeName = $config['ldap']['attributes']['email'] ?? '';
-        $this->birthdayAttributeName = $config['ldap']['attributes']['birthday'] ?? '';
 
         $this->providerConfig = [
             'hosts' => [$config['ldap']['host'] ?? ''],
@@ -193,8 +185,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $this->identifierAttributeName,
             $this->givenNameAttributeName,
             $this->familyNameAttributeName,
-            $this->emailAttributeName,
-            $this->birthdayAttributeName,
             self::FULL_NAME_ATTRIBUTE_NAME,
         ];
 
@@ -384,20 +374,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $person->setIdentifier($identifier);
         $person->setGivenName($user->getFirstAttribute($this->givenNameAttributeName) ?? '');
         $person->setFamilyName($user->getFirstAttribute($this->familyNameAttributeName) ?? '');
-
-        if ($this->emailAttributeName !== '') {
-            $person->setEmail($user->getFirstAttribute($this->emailAttributeName) ?? '');
-        }
-
-        if ($this->birthdayAttributeName !== '') {
-            $birthDateString = trim($user->getFirstAttribute($this->birthdayAttributeName) ?? '');
-
-            $matches = [];
-            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $birthDateString, $matches)) {
-                $birthDateString = "{$matches[1]}-{$matches[2]}-{$matches[3]}";
-            }
-            $person->setBirthDate($birthDateString);
-        }
 
         // Remove all values with numeric keys
         $attributes = array_filter($user->getAttributes(), function ($key) {

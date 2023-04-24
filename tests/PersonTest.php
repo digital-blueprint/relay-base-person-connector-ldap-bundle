@@ -98,7 +98,6 @@ class PersonTest extends ApiTestCase
         ], $this->newBuilder());
 
         $person = $this->ldapApi->personFromUserItem($user);
-        $this->assertEquals('1994-06-24', $person->getBirthDate());
         $this->assertEquals('1994-06-24 00:00:00', $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
     }
 
