@@ -10,5 +10,11 @@ This Symfony bundle connects the DbpRelayBasePersonBundle to an LDAP server.
 composer require dbp/relay-base-person-connector-ldap-bundle
 ```
 
-See the [documentation](./docs/README.md) for more information and the
-[developer documentation](./docs-dev/README.md) for how to extend the bundle.
+See the [documentation](./docs/README.md) for more information.
+
+## Development & Testing
+
+* Install dependencies: `composer install`
+* Run tests: `composer test`
+* Run linters: `composer run lint`
+* Run cs-fixer: `composer run cs-fix`

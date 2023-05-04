@@ -1,17 +1,8 @@
-# Developer Overview
-
-## Development & Testing
-
-* Install dependencies: `composer install`
-* Run tests: `composer test`
-* Run linters: `composer run lint`
-* Run cs-fixer: `composer run cs-fix`
-
-## Events
+# Events
 
 To modify the behavior of the connector bundle the following events are registered:
 
-### PersonUserItemPreEvent
+## PersonUserItemPreEvent
 
 This event allows to modify the identifier before a user is loaded from LDAP.
 
@@ -48,7 +39,7 @@ class PersonUserItemSubscriber implements EventSubscriberInterface
 }
 ```
 
-### PersonFromUserItemPostEvent
+## PersonFromUserItemPostEvent
 
 This event allows to modify a `Person` entity after it is created based on the data from the corresponding LDAP user.
 You can use it to populate the `Person` entity with additional data.
