@@ -2,9 +2,9 @@
 
 ## Customization
 
-The bundle sends out [certain events](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle/-/tree/main#events)
+The bundle sends out [certain events](./events.md)
 you can hook on to inject specific information in an event subscriber.
-Please take a look at the [Event Subscriber Documentation](https://gitlab.tugraz.at/dbp/relay/dbp-relay-base-person-connector-ldap-bundle/-/tree/main#events)
+Please take a look at the [Event Subscriber Documentation](./events.md)
 of the bundle for more information.
 
 If you don't need any customization, you don't need to implement any event subscribers, but the ones needed by the software package you are using.
