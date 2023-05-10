@@ -47,5 +47,8 @@ class Kernel extends BaseKernel
         $container->extension('dbp_relay_base_person_connector_ldap', [
             'ldap' => [],
         ]);
+        $container->extension('api_platform', [
+            'metadata_backward_compatibility_layer' => false,
+        ]);
     }
 }
