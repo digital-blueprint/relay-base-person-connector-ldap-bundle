@@ -8,6 +8,7 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
+use Dbp\Relay\CoreBundle\Helpers\Tools;
 use Dbp\Relay\CoreBundle\LocalData\AbstractLocalDataEventSubscriber;
 use Dbp\Relay\CoreBundle\LocalData\LocalData;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataPreEvent;
@@ -26,11 +27,19 @@ class PersonEventSubscriber extends AbstractLocalDataEventSubscriber
     protected function onPreEvent(LocalDataPreEvent $preEvent, array $localQueryAttributes)
     {
         $options = $preEvent->getOptions();
+
         foreach ($localQueryAttributes as $localQueryAttribute) {
-            LDAPApi::addFilter($options, $localQueryAttribute[self::LOCAL_QUERY_PARAMETER_SOURCE_ATTRIBUTE_KEY],
+            $filterValue = $localQueryAttribute[self::LOCAL_QUERY_PARAMETER_VALUE_KEY];
+            if (Tools::isNullOrEmpty($filterValue)) {
+                throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, sprintf('invalid filter value \'%s\'', $filterValue));
+            }
+
+            LDAPApi::addFilter($options,
+                $localQueryAttribute[self::LOCAL_QUERY_PARAMETER_SOURCE_ATTRIBUTE_KEY],
                 self::toLDAPFilterOperator($localQueryAttribute[self::LOCAL_QUERY_PARAMETER_OPERATOR_KEY]),
-                $localQueryAttribute[self::LOCAL_QUERY_PARAMETER_VALUE_KEY]);
+                $filterValue);
         }
+
         $preEvent->setOptions($options);
     }
 
