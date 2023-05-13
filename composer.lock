@@ -366,21 +366,21 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.17",
+            "version": "v0.2.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-base-person-bundle.git",
-                "reference": "95775b528751cfb8abe5c52c02cdfee724921071"
+                "reference": "782312ca5edcdeb8cef0dc5664dede9f152187ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/95775b528751cfb8abe5c52c02cdfee724921071",
-                "reference": "95775b528751cfb8abe5c52c02cdfee724921071",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/782312ca5edcdeb8cef0dc5664dede9f152187ef",
+                "reference": "782312ca5edcdeb8cef0dc5664dede9f152187ef",
                 "shasum": ""
             },
             "require": {
-                "api-platform/core": "^2.6.3",
-                "dbp/relay-core-bundle": "^0.1.91",
+                "api-platform/core": "^2.7.11",
+                "dbp/relay-core-bundle": "^0.1.98",
                 "ext-json": "*",
                 "guzzlehttp/guzzle": "^7.0",
                 "nelmio/cors-bundle": "^2.1.0",
@@ -419,22 +419,22 @@
             ],
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-base-person-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.17"
+                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.18"
             },
-            "time": "2023-04-24T07:04:25+00:00"
+            "time": "2023-05-09T13:34:44+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
-            "version": "v0.1.100",
+            "version": "v0.1.101",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-bundle.git",
-                "reference": "b9b6701666fd65546f810924bb33663066d8e175"
+                "reference": "8bb8519054401f9c8707abbbdaf4ccf7ad18f840"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-bundle/zipball/b9b6701666fd65546f810924bb33663066d8e175",
-                "reference": "b9b6701666fd65546f810924bb33663066d8e175",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-bundle/zipball/8bb8519054401f9c8707abbbdaf4ccf7ad18f840",
+                "reference": "8bb8519054401f9c8707abbbdaf4ccf7ad18f840",
                 "shasum": ""
             },
             "require": {
@@ -502,9 +502,9 @@
             "description": "The core bundle of the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-bundle/tree/v0.1.100"
+                "source": "https://github.com/digital-blueprint/relay-core-bundle/tree/v0.1.101"
             },
-            "time": "2023-05-10T11:54:53+00:00"
+            "time": "2023-05-11T07:07:46+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -9259,16 +9259,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.6.7",
+            "version": "9.6.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "c993f0d3b0489ffc42ee2fe0bd645af1538a63b2"
+                "reference": "17d621b3aff84d0c8b62539e269e87d8d5baa76e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/c993f0d3b0489ffc42ee2fe0bd645af1538a63b2",
-                "reference": "c993f0d3b0489ffc42ee2fe0bd645af1538a63b2",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/17d621b3aff84d0c8b62539e269e87d8d5baa76e",
+                "reference": "17d621b3aff84d0c8b62539e269e87d8d5baa76e",
                 "shasum": ""
             },
             "require": {
@@ -9342,7 +9342,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.7"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.8"
             },
             "funding": [
                 {
@@ -9358,7 +9358,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-04-14T08:58:40+00:00"
+            "time": "2023-05-11T05:14:45+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -11176,5 +11176,5 @@
     "platform-overrides": {
         "php": "7.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
