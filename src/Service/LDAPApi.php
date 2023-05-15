@@ -14,7 +14,7 @@ use Adldap\Connections\Provider;
 use Adldap\Connections\ProviderInterface;
 use Adldap\Models\User;
 use Adldap\Query\Builder;
-use Adldap\Query\Operator;
+use Adldap\Query\Operator as AdldapQueryOperator;
 use Adldap\Query\Paginator as AdldapPaginator;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
@@ -22,9 +22,13 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
+use Dbp\Relay\CoreBundle\Helpers\Tools;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
 use Dbp\Relay\CoreBundle\LocalData\LocalData;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataEventDispatcher;
+use Dbp\Relay\CoreBundle\Query\Filter;
+use Dbp\Relay\CoreBundle\Query\LogicalOperator;
+use Dbp\Relay\CoreBundle\Query\Operator;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -40,14 +44,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     public const SEARCH_OPTION = 'search';
     public const FILTERS_OPTION = 'filters';
-
-    public const CONTAINS_CI_FILTER_OPERATOR = 'contains_ci';
-    public const AND_LOGICAL_OPERATOR = 'and';
-    public const OR_LOGICAL_OPERATOR = 'or';
-
-    private const FILTER_ATTRIBUTE_OPERATOR = 'operator';
-    private const FILTER_ATTRIBUTE_FILTER_VALUE = 'filterValue';
-    private const FILTER_ATTRIBUTE_LOGICAL_OPERATOR = 'logical';
 
     private const FULL_NAME_ATTRIBUTE_NAME = 'fullName';
 
@@ -86,31 +82,28 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /** @var LocalDataEventDispatcher */
     private $eventDispatcher;
 
-    public static function addFilter(array &$targetOptions, string $fieldName, string $filterOperator, $filterValue, string $logicalOperator = self::AND_LOGICAL_OPERATOR)
+    public static function addFilter(array &$targetOptions, Filter $filter)
     {
-        if ($fieldName === '' || $filterOperator === '' || $filterValue === '' || $logicalOperator === '') {
+        if ($filter->getField() === '' || $filter->getOperator() === '' || $filter->getValue() === '' || $filter->getLogicalOperator() === '') {
             throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'invalid filter');
         }
 
         if (isset($targetOptions[self::FILTERS_OPTION]) === false) {
             $targetOptions[self::FILTERS_OPTION] = [];
         }
-        if (isset($targetOptions[self::FILTERS_OPTION][$fieldName]) === false) {
-            $targetOptions[self::FILTERS_OPTION][$fieldName] = [];
-        }
 
-        $targetOptions[self::FILTERS_OPTION][$fieldName][] = [
-            self::FILTER_ATTRIBUTE_OPERATOR => $filterOperator,
-            self::FILTER_ATTRIBUTE_FILTER_VALUE => $filterValue,
-            self::FILTER_ATTRIBUTE_LOGICAL_OPERATOR => $logicalOperator,
-        ];
+        Tools::pushToSubarray($targetOptions[self::FILTERS_OPTION], $filter->getField(), $filter);
     }
 
-    private static function toAdldapFilterOperator(string $filterOperator): string
+    private static function toAdldapFilterOperator(string $filterOperator, string $logicalOperator): string
     {
         switch ($filterOperator) {
-            case self::CONTAINS_CI_FILTER_OPERATOR:
-                return Operator::$contains;
+            case Operator::ICONTAINS:
+                return $logicalOperator === LogicalOperator::AND_NOT || $logicalOperator === LogicalOperator::OR_NOT ?
+                    AdldapQueryOperator::$notContains : AdldapQueryOperator::$contains;
+            case Operator::IEQUALS:
+                return $logicalOperator === LogicalOperator::AND_NOT || $logicalOperator === LogicalOperator::OR_NOT ?
+                    AdldapQueryOperator::$doesNotEqual : AdldapQueryOperator::$equals;
                 default:
                     throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'unsupported filter operator: '.$filterOperator);
         }
@@ -119,9 +112,11 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     private static function toAdldapLogicalOperator(string $logicalOperator): string
     {
         switch ($logicalOperator) {
-            case self::AND_LOGICAL_OPERATOR:
+            case LogicalOperator::AND:
+            case LogicalOperator::AND_NOT:
                 return 'and';
-            case self::OR_LOGICAL_OPERATOR:
+            case LogicalOperator::OR:
+            case LogicalOperator::OR_NOT:
                 return 'or';
             default:
                 throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'unsupported logical operator: '.$logicalOperator);
@@ -273,9 +268,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
                 foreach ($filtersOption as $fieldName => $filters) {
                     foreach ($filters as $filter) {
                         $search->where($fieldName,
-                            self::toAdldapFilterOperator($filter[self::FILTER_ATTRIBUTE_OPERATOR]),
-                            $filter[self::FILTER_ATTRIBUTE_FILTER_VALUE],
-                            self::toAdldapLogicalOperator($filter[self::FILTER_ATTRIBUTE_LOGICAL_OPERATOR]));
+                            self::toAdldapFilterOperator($filter->getOperator(), $filter->getLogicalOperator()),
+                            $filter->getValue(),
+                            self::toAdldapLogicalOperator($filter->getLogicalOperator()));
                     }
                 }
             }
@@ -311,7 +306,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         if (($searchOption = $options[self::SEARCH_OPTION] ?? null) && $searchOption !== '') {
             // full name MUST contain  ALL substrings of search term
             foreach (explode(' ', $searchOption) as $searchTermPart) {
-                self::addFilter($options, self::FULL_NAME_ATTRIBUTE_NAME, self::CONTAINS_CI_FILTER_OPERATOR, $searchTermPart);
+                self::addFilter($options, new Filter(self::FULL_NAME_ATTRIBUTE_NAME, Operator::ICONTAINS, $searchTermPart));
             }
         }
 

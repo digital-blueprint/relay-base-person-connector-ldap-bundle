@@ -10,7 +10,6 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools;
 use Dbp\Relay\CoreBundle\LocalData\AbstractLocalDataEventSubscriber;
-use Dbp\Relay\CoreBundle\LocalData\LocalData;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataPreEvent;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -24,32 +23,19 @@ class PersonEventSubscriber extends AbstractLocalDataEventSubscriber
             ];
     }
 
-    protected function onPreEvent(LocalDataPreEvent $preEvent, array $localQueryAttributes)
+    protected function onPreEvent(LocalDataPreEvent $preEvent, array $localQueryFilters)
     {
         $options = $preEvent->getOptions();
 
-        foreach ($localQueryAttributes as $localQueryAttribute) {
-            $filterValue = $localQueryAttribute[self::LOCAL_QUERY_PARAMETER_VALUE_KEY];
+        foreach ($localQueryFilters as $localQueryFilter) {
+            $filterValue = $localQueryFilter->getValue();
             if (Tools::isNullOrEmpty($filterValue)) {
-                throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, sprintf('invalid filter value \'%s\'', $filterValue));
+                throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'LDAP filter value mustn\'t be null or empty');
             }
 
-            LDAPApi::addFilter($options,
-                $localQueryAttribute[self::LOCAL_QUERY_PARAMETER_SOURCE_ATTRIBUTE_KEY],
-                self::toLDAPFilterOperator($localQueryAttribute[self::LOCAL_QUERY_PARAMETER_OPERATOR_KEY]),
-                $filterValue);
+            LDAPApi::addFilter($options, $localQueryFilter);
         }
 
         $preEvent->setOptions($options);
-    }
-
-    private function toLDAPFilterOperator(string $localDataQueryOperator): string
-    {
-        switch ($localDataQueryOperator) {
-            case LocalData::LOCAL_QUERY_OPERATOR_CONTAINS_CI:
-                return LDAPApi::CONTAINS_CI_FILTER_OPERATOR;
-            default:
-                throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, sprintf('unknown local data query operator \'%s\'', $localDataQueryOperator));
-        }
     }
 }
