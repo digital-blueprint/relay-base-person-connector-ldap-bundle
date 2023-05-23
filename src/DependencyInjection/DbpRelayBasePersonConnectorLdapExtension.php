@@ -27,14 +27,4 @@ class DbpRelayBasePersonConnectorLdapExtension extends ConfigurableExtension
         $postEventSubscriber = $container->getDefinition(PersonEventSubscriber::class);
         $postEventSubscriber->addMethodCall('setConfig', [$mergedConfig]);
     }
-
-    private function extendArrayParameter(ContainerBuilder $container, string $parameter, array $values)
-    {
-        if (!$container->hasParameter($parameter)) {
-            $container->setParameter($parameter, []);
-        }
-        $oldValues = $container->getParameter($parameter);
-        assert(is_array($oldValues));
-        $container->setParameter($parameter, array_merge($oldValues, $values));
-    }
 }
