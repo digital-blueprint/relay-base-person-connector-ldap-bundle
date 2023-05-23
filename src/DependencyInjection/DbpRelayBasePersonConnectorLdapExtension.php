@@ -6,7 +6,6 @@ namespace Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection;
 
 use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -22,20 +21,8 @@ class DbpRelayBasePersonConnectorLdapExtension extends ConfigurableExtension
         );
         $loader->load('services.yaml');
 
-        $ldapCache = $container->register('dbp_api.cache.ldap_person_provider.ldap', FilesystemAdapter::class);
-        $ldapCache->setArguments(['core-ldap', 360, '%kernel.cache_dir%/dbp/ldap-person-provider-ldap']);
-        $ldapCache->setPublic(true);
-        $ldapCache->addTag('cache.pool');
-
-        $personCacheDef = $container->register('dbp_api.cache.ldap_person_provider.auth_person', FilesystemAdapter::class);
-        $personCacheDef->setArguments(['core-auth-person', 60, '%kernel.cache_dir%/dbp/ldap-person-provider-auth-person']);
-        $personCacheDef->addTag('cache.pool');
-
-        // Inject the config value into the UCardService service
         $definition = $container->getDefinition(LDAPApi::class);
         $definition->addMethodCall('setConfig', [$mergedConfig]);
-        $definition->addMethodCall('setLDAPCache', [$ldapCache, 360]);
-        $definition->addMethodCall('setPersonCache', [$personCacheDef]);
 
         $postEventSubscriber = $container->getDefinition(PersonEventSubscriber::class);
         $postEventSubscriber->addMethodCall('setConfig', [$mergedConfig]);

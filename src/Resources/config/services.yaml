@@ -1,6 +1,16 @@
 services:
-  Dbp\Relay\BasePersonConnectorLdapBundle\Service\:
-    resource: '../../Service'
+  Dbp\Relay\BasePersonConnectorLdapBundle\Service\HealthCheck:
+    autowire: true
+    autoconfigure: true
+
+  Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi:
+    autowire: true
+    autoconfigure: true
+    calls:
+      - setLDAPCache: [ '@dbp.relay.base_person_connector_ldap.cache.ldap', 360]
+      - setPersonCache: [ '@dbp.relay.base_person_connector_ldap.cache.auth_person' ]
+
+  Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider:
     autowire: true
     autoconfigure: true
 
@@ -10,3 +20,13 @@ services:
 
   Dbp\Relay\BasePersonBundle\API\PersonProviderInterface:
     '@Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider'
+
+  dbp.relay.base_person_connector_ldap.cache.ldap:
+    parent: cache.app
+    tags:
+      - { name: 'cache.pool', default_lifetime: 360 }
+
+  dbp.relay.base_person_connector_ldap.cache.auth_person:
+    parent: cache.app
+    tags:
+      - { name: 'cache.pool', default_lifetime: 360 }
