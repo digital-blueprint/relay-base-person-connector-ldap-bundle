@@ -10,11 +10,11 @@ declare(strict_types=1);
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 
 use Adldap\Adldap;
+use Adldap\Auth\BindException;
 use Adldap\Connections\Provider;
 use Adldap\Connections\ProviderInterface;
 use Adldap\Models\User;
 use Adldap\Query\Builder;
-use Adldap\Query\Operator as AdldapQueryOperator;
 use Adldap\Query\Paginator as AdldapPaginator;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
@@ -24,11 +24,14 @@ use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Helpers\Tools;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
-use Dbp\Relay\CoreBundle\LocalData\LocalData;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataEventDispatcher;
-use Dbp\Relay\CoreBundle\Query\Filter;
-use Dbp\Relay\CoreBundle\Query\LogicalOperator;
-use Dbp\Relay\CoreBundle\Query\Operator;
+use Dbp\Relay\CoreBundle\Rest\Options;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\Filter;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\ConditionNode as ConditionFilterNode;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\LogicalNode as LogicalFilterNode;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\Node as FilterNode;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\NodeType as FilterNodeType;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\OperatorType as FilterOperatorType;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -42,10 +45,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 {
     use LoggerAwareTrait;
 
-    public const SEARCH_OPTION = 'search';
-    public const FILTERS_OPTION = 'filters';
-
-    private const FULL_NAME_ATTRIBUTE_NAME = 'fullName';
+    private const IDENTIFIER_ATTRIBUTE_KEY = 'identifier';
+    private const GIVEN_NAME_ATTRIBUTE_KEY = 'givenName';
+    private const FAMILY_NAME_ATTRIBUTE_KEY = 'familyName';
 
     /** @var ProviderInterface|null */
     private $provider;
@@ -70,56 +72,53 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /** @var ContainerInterface */
     private $locator;
 
-    /** @var string */
-    private $identifierAttributeName;
-
-    /** @var string */
-    private $givenNameAttributeName;
-
-    /** @var string */
-    private $familyNameAttributeName;
+    /** @var AttributeMapper */
+    private $attributeMapper;
 
     /** @var LocalDataEventDispatcher */
     private $eventDispatcher;
 
-    public static function addFilter(array &$targetOptions, Filter $filter)
+    private static function addFilterToQuery(Builder $query, FilterNode $filterNode, AttributeMapper $attributeMapper)
     {
-        if ($filter->getField() === '' || $filter->getOperator() === '' || $filter->getValue() === '' || $filter->getLogicalOperator() === '') {
-            throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'invalid filter');
-        }
-
-        if (isset($targetOptions[self::FILTERS_OPTION]) === false) {
-            $targetOptions[self::FILTERS_OPTION] = [];
-        }
-
-        Tools::pushToSubarray($targetOptions[self::FILTERS_OPTION], $filter->getField(), $filter);
-    }
-
-    private static function toAdldapFilterOperator(string $filterOperator, string $logicalOperator): string
-    {
-        switch ($filterOperator) {
-            case Operator::ICONTAINS:
-                return $logicalOperator === LogicalOperator::AND_NOT || $logicalOperator === LogicalOperator::OR_NOT ?
-                    AdldapQueryOperator::$notContains : AdldapQueryOperator::$contains;
-            case Operator::IEQUALS:
-                return $logicalOperator === LogicalOperator::AND_NOT || $logicalOperator === LogicalOperator::OR_NOT ?
-                    AdldapQueryOperator::$doesNotEqual : AdldapQueryOperator::$equals;
+        if ($filterNode instanceof LogicalFilterNode) {
+            switch ($filterNode->getNodeType()) {
+                case FilterNodeType::AND:
+                    $query->andFilter(function (Builder $builder) use ($attributeMapper, $filterNode) {
+                        foreach ($filterNode->getChildren() as $childNodeDefinition) {
+                            self::addFilterToQuery($builder, $childNodeDefinition, $attributeMapper);
+                        }
+                    });
+                    break;
+                case FilterNodeType::OR:
+                    $query->orFilter(function (Builder $builder) use ($attributeMapper, $filterNode) {
+                        foreach ($filterNode->getChildren() as $childNodeDefinition) {
+                            self::addFilterToQuery($builder, $childNodeDefinition, $attributeMapper);
+                        }
+                    });
+                    break;
+                case FilterNodeType::NOT:
+                    $query->notFilter(function (Builder $builder) use ($attributeMapper, $filterNode) {
+                        foreach ($filterNode->getChildren() as $childNodeDefinition) {
+                            self::addFilterToQuery($builder, $childNodeDefinition, $attributeMapper);
+                        }
+                    });
+                    break;
                 default:
-                    throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'unsupported filter operator: '.$filterOperator);
-        }
-    }
-
-    private static function toAdldapLogicalOperator(string $logicalOperator): string
-    {
-        switch ($logicalOperator) {
-            case LogicalOperator::AND:
-            case LogicalOperator::AND_NOT:
-                return 'and';
-            case LogicalOperator::OR:
-            case LogicalOperator::OR_NOT:
-                return 'or';
-            default:
-                throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'unsupported logical operator: '.$logicalOperator);
+                    throw new \InvalidArgumentException('invalid filter node type: ', $filterNode->getNodeType());
+            }
+        } elseif ($filterNode instanceof ConditionFilterNode) {
+            switch ($filterNode->getOperator()) {
+                case FilterOperatorType::ICONTAINS_OPERATOR:
+                case FilterOperatorType::CONTAINS_OPERATOR: // // TODO: post-precessing required
+                    $query->whereContains($attributeMapper->getTargetAttributePath($filterNode->getField()), $filterNode->getValue());
+                    break;
+                case FilterOperatorType::IEQUALS_OPERATOR:
+                case FilterOperatorType::EQUALS_OPERATOR: // TODO: post-precessing required
+                    $query->whereEquals($attributeMapper->getTargetAttributePath($filterNode->getField()), $filterNode->getValue());
+                    break;
+                default:
+                    throw new \InvalidArgumentException('invalid filter operator: '.$filterNode->getOperator());
+            }
         }
     }
 
@@ -131,13 +130,22 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
         $this->eventDispatcher = new LocalDataEventDispatcher(Person::class, $dispatcher);
+        $this->attributeMapper = new AttributeMapper();
     }
 
     public function setConfig(array $config)
     {
-        $this->identifierAttributeName = $config['ldap']['attributes']['identifier'] ?? 'cn';
-        $this->givenNameAttributeName = $config['ldap']['attributes']['given_name'] ?? 'givenName';
-        $this->familyNameAttributeName = $config['ldap']['attributes']['family_name'] ?? 'sn';
+        $this->attributeMapper->addMappingEntry(self::IDENTIFIER_ATTRIBUTE_KEY,
+            $config['ldap']['attributes']['identifier'] ?? 'cn');
+        $this->attributeMapper->addMappingEntry(self::GIVEN_NAME_ATTRIBUTE_KEY,
+            $config['ldap']['attributes']['given_name'] ?? 'givenName');
+        $this->attributeMapper->addMappingEntry(self::FAMILY_NAME_ATTRIBUTE_KEY,
+            $config['ldap']['attributes']['family_name'] ?? 'sn');
+
+        foreach ($config['local_data_mapping'] ?? [] as $localDataMappingEntry) {
+            $this->attributeMapper->addMappingEntry($localDataMappingEntry['local_data_attribute'],
+                $localDataMappingEntry['source_attribute']);
+        }
 
         $this->providerConfig = [
             'hosts' => [$config['ldap']['host'] ?? ''],
@@ -177,10 +185,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     public function checkAttributes()
     {
         $attributes = [
-            $this->identifierAttributeName,
-            $this->givenNameAttributeName,
-            $this->familyNameAttributeName,
-            self::FULL_NAME_ATTRIBUTE_NAME,
+            $this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY),
+            $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY),
+            $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY),
         ];
 
         $missing = [];
@@ -255,32 +262,26 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /*
      * @throws ApiError
      */
-    private function getPeopleUserItems(int $currentPageNumber, int $maxNumItemsPerPage, array $options): AdldapPaginator
+    private function getPeopleUserItems(int $currentPageNumber, int $maxNumItemsPerPage, Filter $filter): AdldapPaginator
     {
         try {
             $provider = $this->getProvider();
-            $builder = $this->getCachedBuilder($provider);
+            $query = $this->getCachedBuilder($provider);
 
-            $search = $builder
+            $query = $query
                 ->whereEquals('objectClass', $provider->getSchema()->person());
 
-            if ($filtersOption = $options[self::FILTERS_OPTION] ?? null) {
-                foreach ($filtersOption as $fieldName => $filters) {
-                    foreach ($filters as $filter) {
-                        $search->where($fieldName,
-                            self::toAdldapFilterOperator($filter->getOperator(), $filter->getLogicalOperator()),
-                            $filter->getValue(),
-                            self::toAdldapLogicalOperator($filter->getLogicalOperator()));
-                    }
-                }
-            }
+            self::addFilterToQuery($query, $filter->getRootNode(), $this->attributeMapper);
+
+            //dump($query->getUnescapedQuery());
 
             // API platform's first page is 1, Adldap's first page is 0
             $currentPageIndex = $currentPageNumber - 1;
 
-            return $search->sortBy($this->familyNameAttributeName, 'asc')
+            return $query->sortBy(
+                $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY), 'asc')
                 ->paginate($maxNumItemsPerPage, $currentPageIndex);
-        } catch (\Adldap\Auth\BindException $e) {
+        } catch (BindException $e) {
             // There was an issue binding / connecting to the server.
             throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY, sprintf('People could not be loaded! Message: %s', CoreTools::filterErrorMessage($e->getMessage())));
         }
@@ -288,12 +289,15 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
     /*
      * @param array $options    Available options are:
-     *                          * LDAPApi::SEARCH_OPTION (string) Return all persons whose full name contains (case-insensitive) all substrings of the given string (whitespace separated).
+     *                          * Person::SEARCH_PARAMETER_NAME (string) Return all persons whose full name contains (case-insensitive) all substrings of the given string (whitespace separated).
      *                          * LDAPApi::FILTERS_OPTIONS (array) Return all persons that pass the given filters. Use LDAPApi::addFilter to add filters.
      *
      * @return Person[]
      *
      * @throws ApiError
+     */
+    /**
+     * @throws \Exception
      */
     public function getPersons(int $currentPageNumber, int $maxNumItemsPerPage, array $options = []): array
     {
@@ -302,16 +306,23 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $preEvent = new PersonPreEvent($options);
         $this->eventDispatcher->dispatch($preEvent);
         $options = $preEvent->getOptions();
+        $filter = Options::getFilter($options) ?? Filter::create();
 
-        if (($searchOption = $options[self::SEARCH_OPTION] ?? null) && $searchOption !== '') {
+        $searchOption = $options[Person::SEARCH_PARAMETER_NAME] ?? null;
+        if (Tools::isNullOrEmpty($searchOption) === false) {
             // full name MUST contain  ALL substrings of search term
-            foreach (explode(' ', $searchOption) as $searchTermPart) {
-                self::addFilter($options, new Filter(self::FULL_NAME_ATTRIBUTE_NAME, Operator::ICONTAINS, $searchTermPart));
+            $searchTerms = explode(' ', $searchOption);
+            foreach ($searchTerms as $searchTerm) {
+                $filter->getRootNode()
+                    ->or()
+                        ->icontains(self::GIVEN_NAME_ATTRIBUTE_KEY, $searchTerm)
+                        ->icontains(self::FAMILY_NAME_ATTRIBUTE_KEY, $searchTerm)
+                    ->end();
             }
         }
 
         $persons = [];
-        foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $options) as $userItem) {
+        foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $filter) as $userItem) {
             $person = $this->personFromUserItem($userItem);
             if ($person === null) {
                 continue;
@@ -338,18 +349,18 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             /** @var User $user */
             $user = $builder
                 ->whereEquals('objectClass', $provider->getSchema()->person())
-                ->whereEquals($this->identifierAttributeName, $identifier)
+                ->whereEquals($this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY), $identifier)
                 ->first();
 
             if ($user === null) {
                 throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Person with id '%s' could not be found!", $identifier));
             }
 
-            assert($identifier === $user->getFirstAttribute($this->identifierAttributeName));
+            assert($identifier === $user->getFirstAttribute(
+                    $this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY)));
 
-            /* @var User $user */
             return $user;
-        } catch (\Adldap\Auth\BindException $e) {
+        } catch (BindException $e) {
             // There was an issue binding / connecting to the server.
             throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY, sprintf("Person with id '%s' could not be loaded! Message: %s", $identifier, CoreTools::filterErrorMessage($e->getMessage())));
         }
@@ -360,15 +371,17 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
      */
     public function personFromUserItem(User $user): ?Person
     {
-        $identifier = $user->getFirstAttribute($this->identifierAttributeName);
+        $identifier = $user->getFirstAttribute($this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY));
         if ($identifier === null) {
             return null;
         }
 
         $person = new Person();
         $person->setIdentifier($identifier);
-        $person->setGivenName($user->getFirstAttribute($this->givenNameAttributeName) ?? '');
-        $person->setFamilyName($user->getFirstAttribute($this->familyNameAttributeName) ?? '');
+        $person->setGivenName($user->getFirstAttribute(
+                $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY)) ?? '');
+        $person->setFamilyName($user->getFirstAttribute(
+                $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY)) ?? '');
 
         // Remove all values with numeric keys
         $attributes = array_filter($user->getAttributes(), function ($key) {
@@ -478,7 +491,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     {
         $this->eventDispatcher->onNewOperation($options);
 
-        return $this->getCurrentPersonCached(count($options[LocalData::LOCAL_DATA_ATTRIBUTES] ?? []) > 0);
+        return $this->getCurrentPersonCached(count(Options::getLocalDataAttributes($options)) > 0);
     }
 
     public static function getSubscribedServices(): array
