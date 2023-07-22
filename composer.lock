@@ -366,16 +366,16 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.20",
+            "version": "v0.2.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-base-person-bundle.git",
-                "reference": "0dad5c52bb0f6f9ac24338d377c3d58a5f8c5afa"
+                "reference": "d5f09ec049de57126273abadb748319759c3c0a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/0dad5c52bb0f6f9ac24338d377c3d58a5f8c5afa",
-                "reference": "0dad5c52bb0f6f9ac24338d377c3d58a5f8c5afa",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/d5f09ec049de57126273abadb748319759c3c0a2",
+                "reference": "d5f09ec049de57126273abadb748319759c3c0a2",
                 "shasum": ""
             },
             "require": {
@@ -419,9 +419,9 @@
             ],
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-base-person-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.20"
+                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.21"
             },
-            "time": "2023-07-17T11:45:02+00:00"
+            "time": "2023-07-18T07:27:16+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
@@ -11176,5 +11176,5 @@
     "platform-overrides": {
         "php": "7.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
