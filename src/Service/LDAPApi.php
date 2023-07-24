@@ -15,6 +15,7 @@ use Adldap\Connections\Provider;
 use Adldap\Connections\ProviderInterface;
 use Adldap\Models\User;
 use Adldap\Query\Builder;
+use Adldap\Query\Operator as AdldapOperator;
 use Adldap\Query\Paginator as AdldapPaginator;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
@@ -27,6 +28,7 @@ use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataEventDispatcher;
 use Dbp\Relay\CoreBundle\Rest\Options;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Filter;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterTreeBuilder;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\ConditionNode as ConditionFilterNode;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\LogicalNode as LogicalFilterNode;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\Node as FilterNode;
@@ -48,6 +50,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     private const IDENTIFIER_ATTRIBUTE_KEY = 'identifier';
     private const GIVEN_NAME_ATTRIBUTE_KEY = 'givenName';
     private const FAMILY_NAME_ATTRIBUTE_KEY = 'familyName';
+    private const LOCAL_DATA_BASE_PATH = 'localData.';
 
     /** @var ProviderInterface|null */
     private $provider;
@@ -107,17 +110,38 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
                     throw new \InvalidArgumentException('invalid filter node type: ', $filterNode->getNodeType());
             }
         } elseif ($filterNode instanceof ConditionFilterNode) {
+            $field = $attributeMapper->getTargetAttributePath($filterNode->getField());
+            $value = $filterNode->getValue();
             switch ($filterNode->getOperator()) {
-                case FilterOperatorType::ICONTAINS_OPERATOR:
-                case FilterOperatorType::CONTAINS_OPERATOR: // // TODO: post-precessing required
-                    $query->whereContains($attributeMapper->getTargetAttributePath($filterNode->getField()), $filterNode->getValue());
+                case FilterOperatorType::I_CONTAINS_OPERATOR:
+                    $query->whereContains($field, $value);
                     break;
-                case FilterOperatorType::IEQUALS_OPERATOR:
-                case FilterOperatorType::EQUALS_OPERATOR: // TODO: post-precessing required
-                    $query->whereEquals($attributeMapper->getTargetAttributePath($filterNode->getField()), $filterNode->getValue());
+                case FilterOperatorType::EQUALS_OPERATOR: // TODO: case-sensitivity post-precessing required
+                    $query->whereEquals($field, $value);
+                    break;
+                case FilterOperatorType::I_STARTS_WITH_OPERATOR:
+                    $query->whereStartsWith($field, $value);
+                    break;
+                case FilterOperatorType::I_ENDS_WITH_OPERATOR:
+                    $query->whereEndsWith($field, $value);
+                    break;
+                case FilterOperatorType::GREATER_THAN_OR_EQUAL_OPERATOR:
+                    $query->where($field, AdldapOperator::$greaterThanOrEquals, $value);
+                    break;
+                case FilterOperatorType::LESS_THAN_OR_EQUAL_OPERATOR:
+                    $query->where($field, AdldapOperator::$lessThanOrEquals, $value);
+                    break;
+                case FilterOperatorType::IN_ARRAY_OPERATOR:
+                    if (!is_array($value)) {
+                        throw new \RuntimeException('filter condition operator "'.FilterOperatorType::IN_ARRAY_OPERATOR.'" requires an array type value');
+                    }
+                    $query->whereIn($field, $value);
+                    break;
+                case FilterOperatorType::IS_NULL_OPERATOR:
+                    $query->whereHas($field);
                     break;
                 default:
-                    throw new \InvalidArgumentException('invalid filter operator: '.$filterNode->getOperator());
+                    throw new \UnexpectedValueException('unsupported filter condition operator: '.$filterNode->getOperator());
             }
         }
     }
@@ -143,7 +167,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $config['ldap']['attributes']['family_name'] ?? 'sn');
 
         foreach ($config['local_data_mapping'] ?? [] as $localDataMappingEntry) {
-            $this->attributeMapper->addMappingEntry($localDataMappingEntry['local_data_attribute'],
+            $this->attributeMapper->addMappingEntry(self::LOCAL_DATA_BASE_PATH.$localDataMappingEntry['local_data_attribute'],
                 $localDataMappingEntry['source_attribute']);
         }
 
@@ -311,12 +335,13 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $searchOption = $options[Person::SEARCH_PARAMETER_NAME] ?? null;
         if (Tools::isNullOrEmpty($searchOption) === false) {
             // full name MUST contain  ALL substrings of search term
+            $filterTreeBuilder = FilterTreeBuilder::create($filter->getRootNode());
             $searchTerms = explode(' ', $searchOption);
             foreach ($searchTerms as $searchTerm) {
-                $filter->getRootNode()
+                $filterTreeBuilder
                     ->or()
-                        ->icontains(self::GIVEN_NAME_ATTRIBUTE_KEY, $searchTerm)
-                        ->icontains(self::FAMILY_NAME_ATTRIBUTE_KEY, $searchTerm)
+                        ->iContains(self::GIVEN_NAME_ATTRIBUTE_KEY, $searchTerm)
+                        ->iContains(self::FAMILY_NAME_ATTRIBUTE_KEY, $searchTerm)
                     ->end();
             }
         }

@@ -13,7 +13,7 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscribe
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils\TestPersonEventSubscriber;
-use Dbp\Relay\CoreBundle\LocalData\LocalData;
+use Dbp\Relay\CoreBundle\Rest\Options;
 use Mockery;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
@@ -87,7 +87,7 @@ class PersonTest extends ApiTestCase
     public function testLocalDataAttributeBirthDate()
     {
         $options = [];
-        LocalData::requestLocalDataAttributes($options, [self::BIRTHDATE_ATTRIBUTE_NAME]);
+        Options::requestLocalDataAttributes($options, [self::BIRTHDATE_ATTRIBUTE_NAME]);
         $this->ldapApi->getEventDispatcher()->onNewOperation($options);
 
         $user = new AdldapUser([
@@ -104,7 +104,7 @@ class PersonTest extends ApiTestCase
     public function testLocalDataAttributeEmail()
     {
         $options = [];
-        LocalData::requestLocalDataAttributes($options, [self::EMAIL_ATTRIBUTE_NAME]);
+        Options::requestLocalDataAttributes($options, [self::EMAIL_ATTRIBUTE_NAME]);
         $this->ldapApi->getEventDispatcher()->onNewOperation($options);
 
         $EMAIL = 'john@doe.com';
