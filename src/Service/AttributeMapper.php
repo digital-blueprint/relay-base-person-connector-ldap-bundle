@@ -20,4 +20,9 @@ class AttributeMapper
     {
         return $this->mappingEntries[$sourceAttributePath] ?? null;
     }
+
+    public function getMapping(): array
+    {
+        return $this->mappingEntries;
+    }
 }

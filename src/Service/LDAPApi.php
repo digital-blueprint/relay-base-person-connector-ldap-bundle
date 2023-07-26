@@ -81,6 +81,11 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /** @var LocalDataEventDispatcher */
     private $eventDispatcher;
 
+    /**
+     * @var EntityFactory
+     */
+    private $entityFactory;
+
     private static function addFilterToQuery(Builder $query, FilterNode $filterNode, AttributeMapper $attributeMapper)
     {
         if ($filterNode instanceof LogicalFilterNode) {
@@ -401,20 +406,37 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             return null;
         }
 
-        $person = new Person();
-        $person->setIdentifier($identifier);
-        $person->setGivenName($user->getFirstAttribute(
-                $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY)) ?? '');
-        $person->setFamilyName($user->getFirstAttribute(
-                $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY)) ?? '');
+//        $person = new Person();
+//        $person->setIdentifier($identifier);
+//        $person->setGivenName($user->getFirstAttribute(
+//                $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY)) ?? '');
+//        $person->setFamilyName($user->getFirstAttribute(
+//                $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY)) ?? '');
 
         // Remove all values with numeric keys
         $attributes = array_filter($user->getAttributes(), function ($key) {
             return !is_numeric($key);
         }, ARRAY_FILTER_USE_KEY);
 
+        $attributePaths = [
+            'givenName',
+            'familyName',
+            'identifier',
+            'testInt',
+        ];
+        $attributePaths = array_merge($attributePaths,
+            array_map(function ($value) { return self::LOCAL_DATA_BASE_PATH.$value; }, $this->eventDispatcher->getRequestedAttributes()));
+
+        $this->attributeMapper->addMappingEntry('testInt', 'idnumber');
+
+        $this->entityFactory = new EntityFactory(Person::class, $attributePaths, $this->attributeMapper->getMapping(), function ($value) {
+            return is_array($value) ? $value[0] : $value;
+        });
+        dump($attributes);
+        $person = $this->entityFactory->createFromDataRow($attributes);
+
         $postEvent = new PersonPostEvent($person, $attributes);
-        $this->eventDispatcher->dispatch($postEvent);
+        //$this->eventDispatcher->dispatch($postEvent);
 
         return $person;
     }
