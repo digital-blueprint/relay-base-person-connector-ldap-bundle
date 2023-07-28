@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber;
 
-use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
-use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPagePostEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPagePreEvent;
 use Dbp\Relay\CoreBundle\LocalData\AbstractLocalDataEventSubscriber;
 
 class PersonEventSubscriber extends AbstractLocalDataEventSubscriber
@@ -13,8 +13,8 @@ class PersonEventSubscriber extends AbstractLocalDataEventSubscriber
     public static function getSubscribedEventNames(): array
     {
         return [
-            PersonPreEvent::class,
-            PersonPostEvent::class,
+            PersonPagePreEvent::class,
+            PersonPagePostEvent::class,
             ];
     }
 }

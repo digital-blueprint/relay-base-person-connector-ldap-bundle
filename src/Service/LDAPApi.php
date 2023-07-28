@@ -18,8 +18,9 @@ use Adldap\Query\Builder;
 use Adldap\Query\Operator as AdldapOperator;
 use Adldap\Query\Paginator as AdldapPaginator;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
-use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
-use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonItemCreatedEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPagePostEvent;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPagePreEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
@@ -28,6 +29,7 @@ use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataEventDispatcher;
 use Dbp\Relay\CoreBundle\Rest\Options;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Filter;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterException;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterTreeBuilder;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\ConditionNode as ConditionFilterNode;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\LogicalNode as LogicalFilterNode;
@@ -39,11 +41,10 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Cache\Psr16Cache;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
-class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
+class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterface, ServiceSubscriberInterface
 {
     use LoggerAwareTrait;
 
@@ -75,34 +76,28 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     /** @var ContainerInterface */
     private $locator;
 
-    /** @var AttributeMapper */
-    private $attributeMapper;
-
-    /** @var LocalDataEventDispatcher */
-    private $eventDispatcher;
-
-    private static function addFilterToQuery(Builder $query, FilterNode $filterNode, AttributeMapper $attributeMapper)
+    private static function addFilterToQuery(Builder $query, FilterNode $filterNode)
     {
         if ($filterNode instanceof LogicalFilterNode) {
             switch ($filterNode->getNodeType()) {
                 case FilterNodeType::AND:
-                    $query->andFilter(function (Builder $builder) use ($attributeMapper, $filterNode) {
+                    $query->andFilter(function (Builder $builder) use ($filterNode) {
                         foreach ($filterNode->getChildren() as $childNodeDefinition) {
-                            self::addFilterToQuery($builder, $childNodeDefinition, $attributeMapper);
+                            self::addFilterToQuery($builder, $childNodeDefinition);
                         }
                     });
                     break;
                 case FilterNodeType::OR:
-                    $query->orFilter(function (Builder $builder) use ($attributeMapper, $filterNode) {
+                    $query->orFilter(function (Builder $builder) use ($filterNode) {
                         foreach ($filterNode->getChildren() as $childNodeDefinition) {
-                            self::addFilterToQuery($builder, $childNodeDefinition, $attributeMapper);
+                            self::addFilterToQuery($builder, $childNodeDefinition);
                         }
                     });
                     break;
                 case FilterNodeType::NOT:
-                    $query->notFilter(function (Builder $builder) use ($attributeMapper, $filterNode) {
+                    $query->notFilter(function (Builder $builder) use ($filterNode) {
                         foreach ($filterNode->getChildren() as $childNodeDefinition) {
-                            self::addFilterToQuery($builder, $childNodeDefinition, $attributeMapper);
+                            self::addFilterToQuery($builder, $childNodeDefinition);
                         }
                     });
                     break;
@@ -110,7 +105,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
                     throw new \InvalidArgumentException('invalid filter node type: ', $filterNode->getNodeType());
             }
         } elseif ($filterNode instanceof ConditionFilterNode) {
-            $field = $attributeMapper->getTargetAttributePath($filterNode->getField());
+            $field = $filterNode->getField();
             $value = $filterNode->getValue();
             switch ($filterNode->getOperator()) {
                 case FilterOperatorType::I_CONTAINS_OPERATOR:
@@ -146,30 +141,45 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         }
     }
 
-    public function __construct(ContainerInterface $locator, EventDispatcherInterface $dispatcher)
+    public function __construct(ContainerInterface $locator)
     {
+        parent::__construct(Person::class);
+
         $this->provider = null;
         $this->cacheTTL = 0;
         $this->currentPerson = null;
         $this->locator = $locator;
         $this->deploymentEnv = 'production';
-        $this->eventDispatcher = new LocalDataEventDispatcher(Person::class, $dispatcher);
-        $this->attributeMapper = new AttributeMapper();
     }
 
-    public function setConfig(array $config)
+    public function setConfig(array $config): void
     {
-        $this->attributeMapper->addMappingEntry(self::IDENTIFIER_ATTRIBUTE_KEY,
-            $config['ldap']['attributes']['identifier'] ?? 'cn');
-        $this->attributeMapper->addMappingEntry(self::GIVEN_NAME_ATTRIBUTE_KEY,
-            $config['ldap']['attributes']['given_name'] ?? 'givenName');
-        $this->attributeMapper->addMappingEntry(self::FAMILY_NAME_ATTRIBUTE_KEY,
-            $config['ldap']['attributes']['family_name'] ?? 'sn');
+        $parentConfig = [
+            'attributes' => [
+                [
+                    'name' => self::IDENTIFIER_ATTRIBUTE_KEY,
+                    'source_attribute' => $config['ldap']['attributes']['identifier'] ?? 'cn',
+                ],
+                [
+                    'name' => self::GIVEN_NAME_ATTRIBUTE_KEY,
+                    'source_attribute' => $config['ldap']['attributes']['given_name'] ?? 'givenName',
+                ],
+                [
+                    'name' => self::FAMILY_NAME_ATTRIBUTE_KEY,
+                    'source_attribute' => $config['ldap']['attributes']['family_name'] ?? 'sn',
+                ],
+            ],
+            'local_data_attributes' => [],
+        ];
 
         foreach ($config['local_data_mapping'] ?? [] as $localDataMappingEntry) {
-            $this->attributeMapper->addMappingEntry(self::LOCAL_DATA_BASE_PATH.$localDataMappingEntry['local_data_attribute'],
-                $localDataMappingEntry['source_attribute']);
+            $parentConfig['local_data_attributes'][] = [
+                'name' => $localDataMappingEntry['local_data_attribute'],
+                'source_attribute' => $localDataMappingEntry['source_attribute'],
+                ];
         }
+
+        parent::setConfig($parentConfig);
 
         $this->providerConfig = [
             'hosts' => [$config['ldap']['host'] ?? ''],
@@ -209,9 +219,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     public function checkAttributes()
     {
         $attributes = [
-            $this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY),
-            $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY),
-            $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY),
+            $this->getSourceAttributeName(self::IDENTIFIER_ATTRIBUTE_KEY),
+            $this->getSourceAttributeName(self::GIVEN_NAME_ATTRIBUTE_KEY),
+            $this->getSourceAttributeName(self::FAMILY_NAME_ATTRIBUTE_KEY),
         ];
 
         $missing = [];
@@ -240,14 +250,6 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
     public function setPersonCache(?CacheItemPoolInterface $cachePool)
     {
         $this->personCache = $cachePool;
-    }
-
-    /**
-     * For unit testing only.
-     */
-    public function getEventDispatcher(): LocalDataEventDispatcher
-    {
-        return $this->eventDispatcher;
     }
 
     private function getProvider(): ProviderInterface
@@ -295,7 +297,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $query = $query
                 ->whereEquals('objectClass', $provider->getSchema()->person());
 
-            self::addFilterToQuery($query, $filter->getRootNode(), $this->attributeMapper);
+            self::addFilterToQuery($query, $filter->getRootNode());
 
             //dump($query->getUnescapedQuery());
 
@@ -303,59 +305,12 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             $currentPageIndex = $currentPageNumber - 1;
 
             return $query->sortBy(
-                $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY), 'asc')
+                $this->getSourceAttributeName(self::FAMILY_NAME_ATTRIBUTE_KEY), 'asc')
                 ->paginate($maxNumItemsPerPage, $currentPageIndex);
         } catch (BindException $e) {
             // There was an issue binding / connecting to the server.
             throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY, sprintf('People could not be loaded! Message: %s', CoreTools::filterErrorMessage($e->getMessage())));
         }
-    }
-
-    /*
-     * @param array $options    Available options are:
-     *                          * Person::SEARCH_PARAMETER_NAME (string) Return all persons whose full name contains (case-insensitive) all substrings of the given string (whitespace separated).
-     *                          * LDAPApi::FILTERS_OPTIONS (array) Return all persons that pass the given filters. Use LDAPApi::addFilter to add filters.
-     *
-     * @return Person[]
-     *
-     * @throws ApiError
-     */
-    /**
-     * @throws \Exception
-     */
-    public function getPersons(int $currentPageNumber, int $maxNumItemsPerPage, array $options = []): array
-    {
-        $this->eventDispatcher->onNewOperation($options);
-
-        $preEvent = new PersonPreEvent($options);
-        $this->eventDispatcher->dispatch($preEvent);
-        $options = $preEvent->getOptions();
-        $filter = Options::getFilter($options) ?? Filter::create();
-
-        $searchOption = $options[Person::SEARCH_PARAMETER_NAME] ?? null;
-        if (Tools::isNullOrEmpty($searchOption) === false) {
-            // full name MUST contain  ALL substrings of search term
-            $filterTreeBuilder = FilterTreeBuilder::create($filter->getRootNode());
-            $searchTerms = explode(' ', $searchOption);
-            foreach ($searchTerms as $searchTerm) {
-                $filterTreeBuilder
-                    ->or()
-                        ->iContains(self::GIVEN_NAME_ATTRIBUTE_KEY, $searchTerm)
-                        ->iContains(self::FAMILY_NAME_ATTRIBUTE_KEY, $searchTerm)
-                    ->end();
-            }
-        }
-
-        $persons = [];
-        foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $filter) as $userItem) {
-            $person = $this->personFromUserItem($userItem);
-            if ($person === null) {
-                continue;
-            }
-            $persons[] = $person;
-        }
-
-        return $persons;
     }
 
     /*
@@ -374,7 +329,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             /** @var User $user */
             $user = $builder
                 ->whereEquals('objectClass', $provider->getSchema()->person())
-                ->whereEquals($this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY), $identifier)
+                ->whereEquals($this->getSourceAttributeName(self::IDENTIFIER_ATTRIBUTE_KEY), $identifier)
                 ->first();
 
             if ($user === null) {
@@ -382,7 +337,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             }
 
             assert($identifier === $user->getFirstAttribute(
-                    $this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY)));
+                    $this->getSourceAttributeName(self::IDENTIFIER_ATTRIBUTE_KEY)));
 
             return $user;
         } catch (BindException $e) {
@@ -391,62 +346,62 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         }
     }
 
-    /**
-     * Returns null in case the user is not a valid Person, for example if the identifier is missing.
-     */
-    public function personFromUserItem(User $user): ?Person
-    {
-        $identifier = $user->getFirstAttribute($this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY));
-        if ($identifier === null) {
-            return null;
-        }
+//    /**
+//     * Returns null in case the user is not a valid Person, for example if the identifier is missing.
+//     */
+//    public function personFromUserItem(User $user): ?Person
+//    {
+//        $identifier = $user->getFirstAttribute($this->getSourceAttributeName(self::IDENTIFIER_ATTRIBUTE_KEY));
+//        if ($identifier === null) {
+//            return null;
+//        }
+//
+//        $person = new Person();
+//        $person->setIdentifier($identifier);
+//        $person->setGivenName($user->getFirstAttribute(
+//                $this->getSourceAttributeName(self::GIVEN_NAME_ATTRIBUTE_KEY)) ?? '');
+//        $person->setFamilyName($user->getFirstAttribute(
+//                $this->getSourceAttributeName(self::FAMILY_NAME_ATTRIBUTE_KEY)) ?? '');
+//
+//        // Remove all values with numeric keys
+//        $attributes = array_filter($user->getAttributes(), function ($key) {
+//            return !is_numeric($key);
+//        }, ARRAY_FILTER_USE_KEY);
+//
+//        $postEvent = new PersonPagePostEvent($person, $attributes);
+//        $this->eventDispatcher->dispatch($postEvent);
+//
+//        return $person;
+//    }
 
-        $person = new Person();
-        $person->setIdentifier($identifier);
-        $person->setGivenName($user->getFirstAttribute(
-                $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY)) ?? '');
-        $person->setFamilyName($user->getFirstAttribute(
-                $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY)) ?? '');
-
-        // Remove all values with numeric keys
-        $attributes = array_filter($user->getAttributes(), function ($key) {
-            return !is_numeric($key);
-        }, ARRAY_FILTER_USE_KEY);
-
-        $postEvent = new PersonPostEvent($person, $attributes);
-        $this->eventDispatcher->dispatch($postEvent);
-
-        return $person;
-    }
-
-    /**
-     * @thorws ApiError
-     */
-    public function getPerson(string $id, array $options = []): Person
-    {
-        $this->eventDispatcher->onNewOperation($options);
-
-        // extract username in case $id is an iri, e.g. /base/people/{user}
-        $parts = explode('/', $id);
-        $id = $parts[count($parts) - 1];
-
-        $session = $this->getUserSession();
-        $currentIdentifier = $session->getUserIdentifier();
-
-        if ($currentIdentifier !== null && $currentIdentifier === $id) {
-            // fast path
-            $person = $this->getCurrentPersonCached(true);
-            assert($person !== null);
-        } else {
-            $user = $this->getPersonUserItem($id);
-            $person = $this->personFromUserItem($user);
-            if ($person === null) {
-                throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Person with id '%s' could not be found!", $id));
-            }
-        }
-
-        return $person;
-    }
+//    /**
+//     * @thorws ApiError
+//     */
+//    public function getPerson(string $id, array $options = []): Person
+//    {
+//        $this->eventDispatcher->onNewOperation($options);
+//
+//        // extract username in case $id is an iri, e.g. /base/people/{user}
+//        $parts = explode('/', $id);
+//        $id = $parts[count($parts) - 1];
+//
+//        $session = $this->getUserSession();
+//        $currentIdentifier = $session->getUserIdentifier();
+//
+//        if ($currentIdentifier !== null && $currentIdentifier === $id) {
+//            // fast path
+//            $person = $this->getCurrentPersonCached(true);
+//            assert($person !== null);
+//        } else {
+//            $user = $this->getPersonUserItem($id);
+//            $person = $this->personFromUserItem($user);
+//            if ($person === null) {
+//                throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Person with id '%s' could not be found!", $id));
+//            }
+//        }
+//
+//        return $person;
+//    }
 
     private function getUserSession(): UserSessionInterface
     {
@@ -524,5 +479,52 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         return [
             UserSessionInterface::class,
         ];
+    }
+
+    protected function createItemCreatedEvent(object $item, array $itemData): ?AbstractItemCreatedEvent
+    {
+        return new PersonItemCreatedEvent($item, $itemData);
+    }
+
+    protected function getItemDataById(string $id, array $filters, array $options): ?array
+    {
+        return $this->getUserItemData($this->getPersonUserItem($id));
+    }
+
+    /**
+     * @throws FilterException
+     */
+    protected function getItemDataPage(int $currentPageNumber, int $maxNumItemsPerPage, array $filters = [], array $options = []): array
+    {
+        $filter = Options::getFilter($options) ?? Filter::create();
+
+        $searchOption = $options[Person::SEARCH_PARAMETER_NAME] ?? null;
+        if (Tools::isNullOrEmpty($searchOption) === false) {
+            // full name MUST contain  ALL substrings of search term
+            $filterTreeBuilder = FilterTreeBuilder::create($filter->getRootNode());
+            $searchTerms = explode(' ', $searchOption);
+            foreach ($searchTerms as $searchTerm) {
+                $filterTreeBuilder
+                    ->or()
+                    ->iContains(self::GIVEN_NAME_ATTRIBUTE_KEY, $searchTerm)
+                    ->iContains(self::FAMILY_NAME_ATTRIBUTE_KEY, $searchTerm)
+                    ->end();
+            }
+        }
+
+        $personDataPage = [];
+        foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $filter) as $userItem) {
+            $personDataPage[] = $this->getUserItemData($userItem);
+        }
+
+        return $personDataPage;
+    }
+
+    private function getUserItemData(User $user): array
+    {
+        // Remove all values with numeric keys
+        return array_filter($user->getAttributes(), function ($key) {
+            return !is_numeric($key);
+        }, ARRAY_FILTER_USE_KEY);
     }
 }
