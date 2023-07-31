@@ -14,11 +14,6 @@ services:
     autowire: true
     autoconfigure: true
 
-  Dbp\Relay\BasePersonConnectorLdapBundle\Service\DataProviderConnector::
-    autowire: true
-    autoconfigure: true
-
-
   Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber:
     autowire: true
     autoconfigure: true

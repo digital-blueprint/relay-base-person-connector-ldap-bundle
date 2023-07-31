@@ -6,16 +6,22 @@ namespace Dbp\Relay\BasePersonConnectorLdapBundle\Service;
 
 use Dbp\Relay\BasePersonBundle\API\PersonProviderInterface;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
+use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
+use Symfony\Component\HttpFoundation\Response;
 
 class LDAPPersonProvider implements PersonProviderInterface
 {
     /** @var LDAPApi */
     private $ldapApi;
 
-    public function __construct(LDAPApi $ldapApi)
+    /** @var UserSessionInterface */
+    private $userSession;
+
+    public function __construct(LDAPApi $ldapApi, UserSessionInterface $userSession)
     {
         $this->ldapApi = $ldapApi;
+        $this->userSession = $userSession;
     }
 
     /**
@@ -30,7 +36,7 @@ class LDAPPersonProvider implements PersonProviderInterface
      */
     public function getPersons(int $currentPageNumber, int $maxNumItemsPerPage, array $options = []): array
     {
-        return $this->ldapApi->getPersons($currentPageNumber, $maxNumItemsPerPage, $options);
+        return $this->ldapApi->getItemCollection($currentPageNumber, $maxNumItemsPerPage, $options);
     }
 
     /**
@@ -43,7 +49,13 @@ class LDAPPersonProvider implements PersonProviderInterface
      */
     public function getPerson(string $id, array $options = []): Person
     {
-        return $this->ldapApi->getPerson($id, $options);
+        /* @var Person */
+        $person = $this->ldapApi->getItemById($id, $options);
+        if ($person === null) {
+            throw ApiError::withDetails(Response::HTTP_NOT_FOUND);
+        }
+
+        return $person;
     }
 
     /**
@@ -54,6 +66,9 @@ class LDAPPersonProvider implements PersonProviderInterface
      */
     public function getCurrentPerson(array $options = []): ?Person
     {
-        return $this->ldapApi->getCurrentPerson($options);
+        dump('HELLO WORLD!');
+        $currentUserIdentifier = $this->userSession->getUserIdentifier();
+
+        return $currentUserIdentifier !== null ? $this->ldapApi->getItemById($currentUserIdentifier, $options) : null;
     }
 }

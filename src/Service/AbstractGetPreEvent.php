@@ -8,25 +8,8 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class AbstractGetPreEvent extends Event
 {
-    /*
-     * @var array
-     */
-    private $filters;
-
-    /*
-     * @var array
-     */
+    /* @var array */
     private $options;
-
-    public function getFilters(): array
-    {
-        return $this->filters;
-    }
-
-    public function setFilters(array $filters): void
-    {
-        $this->filters = $filters;
-    }
 
     public function getOptions(): array
     {

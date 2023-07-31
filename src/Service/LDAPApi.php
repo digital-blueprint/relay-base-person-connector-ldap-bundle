@@ -44,7 +44,7 @@ use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
 
-class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterface, ServiceSubscriberInterface
+class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
@@ -57,15 +57,13 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
     private $provider;
 
     /** @var CacheItemPoolInterface|null */
-    private $cachePool;
+    private $ldapCache;
 
     /** @var CacheItemPoolInterface|null */
     private $personCache;
 
+    /** @var int */
     private $cacheTTL;
-
-    /** @var Person|null */
-    private $currentPerson;
 
     /** @var array|null */
     private $providerConfig;
@@ -73,8 +71,8 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
     /** @var string */
     private $deploymentEnv;
 
-    /** @var ContainerInterface */
-    private $locator;
+    /** @var UserSessionInterface */
+    private $userSession;
 
     private static function addFilterToQuery(Builder $query, FilterNode $filterNode)
     {
@@ -141,14 +139,13 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
         }
     }
 
-    public function __construct(ContainerInterface $locator)
+    public function __construct(UserSessionInterface $userSession)
     {
         parent::__construct(Person::class);
 
         $this->provider = null;
         $this->cacheTTL = 0;
-        $this->currentPerson = null;
-        $this->locator = $locator;
+        $this->userSession = $userSession;
         $this->deploymentEnv = 'production';
     }
 
@@ -197,18 +194,15 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
 
     public function checkConnection()
     {
-        $provider = $this->getProvider();
-        $builder = $this->getCachedBuilder($provider);
-        $builder->first();
+        $this->getCachedBuilder($this->getProvider())->first();
     }
 
-    public function checkAttributeExists(string $attribute): bool
+    private function checkAttributeExists(string $attribute): bool
     {
         $provider = $this->getProvider();
-        $builder = $this->getCachedBuilder($provider);
 
         /** @var User $user */
-        $user = $builder
+        $user = $this->getCachedBuilder($provider)
             ->where('objectClass', '=', $provider->getSchema()->person())
             ->whereHas($attribute)
             ->first();
@@ -243,7 +237,7 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
 
     public function setLDAPCache(?CacheItemPoolInterface $cachePool, int $ttl)
     {
-        $this->cachePool = $cachePool;
+        $this->ldapCache = $cachePool;
         $this->cacheTTL = $ttl;
     }
 
@@ -265,8 +259,8 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
             $this->provider = $ad->connect();
             assert($this->provider instanceof Provider);
 
-            if ($this->cachePool !== null) {
-                $this->provider->setCache(new Psr16Cache($this->cachePool));
+            if ($this->ldapCache !== null) {
+                $this->provider->setCache(new Psr16Cache($this->ldapCache));
             }
         }
 
@@ -292,14 +286,10 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
     {
         try {
             $provider = $this->getProvider();
-            $query = $this->getCachedBuilder($provider);
-
-            $query = $query
+            $query = $this->getCachedBuilder($provider)
                 ->whereEquals('objectClass', $provider->getSchema()->person());
 
             self::addFilterToQuery($query, $filter->getRootNode());
-
-            //dump($query->getUnescapedQuery());
 
             // API platform's first page is 1, Adldap's first page is 0
             $currentPageIndex = $currentPageNumber - 1;
@@ -318,16 +308,11 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
      */
     private function getPersonUserItem(string $identifier): User
     {
-        $preEvent = new PersonUserItemPreEvent($identifier);
-        $this->eventDispatcher->dispatch($preEvent);
-        $identifier = $preEvent->getIdentifier();
-
         try {
             $provider = $this->getProvider();
-            $builder = $this->getCachedBuilder($provider);
 
             /** @var User $user */
-            $user = $builder
+            $user = $this->getCachedBuilder($provider)
                 ->whereEquals('objectClass', $provider->getSchema()->person())
                 ->whereEquals($this->getSourceAttributeName(self::IDENTIFIER_ATTRIBUTE_KEY), $identifier)
                 ->first();
@@ -347,154 +332,75 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
     }
 
 //    /**
-//     * Returns null in case the user is not a valid Person, for example if the identifier is missing.
+//     * @thorws ApiError
 //     */
-//    public function personFromUserItem(User $user): ?Person
+//    private function getCurrentPersonCached(bool $checkLocalDataAttributes): ?Person
 //    {
-//        $identifier = $user->getFirstAttribute($this->getSourceAttributeName(self::IDENTIFIER_ATTRIBUTE_KEY));
-//        if ($identifier === null) {
+//        $session = $this->getUserSession();
+//        $currentIdentifier = $session->getUserIdentifier();
+//        if ($currentIdentifier === null) {
 //            return null;
 //        }
 //
-//        $person = new Person();
-//        $person->setIdentifier($identifier);
-//        $person->setGivenName($user->getFirstAttribute(
-//                $this->getSourceAttributeName(self::GIVEN_NAME_ATTRIBUTE_KEY)) ?? '');
-//        $person->setFamilyName($user->getFirstAttribute(
-//                $this->getSourceAttributeName(self::FAMILY_NAME_ATTRIBUTE_KEY)) ?? '');
+//        if ($this->currentPerson) {
+//            if ($this->currentPerson->getIdentifier() === $currentIdentifier &&
+//                (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($this->currentPerson))) {
+//                return $this->currentPerson;
+//            }
+//            $this->currentPerson = null;
+//        }
 //
-//        // Remove all values with numeric keys
-//        $attributes = array_filter($user->getAttributes(), function ($key) {
-//            return !is_numeric($key);
-//        }, ARRAY_FILTER_USE_KEY);
+//        $cache = $this->personCache;
+//        $cacheKey = $session->getSessionCacheKey().'-'.$currentIdentifier;
+//        // make sure the cache is longer than the session, so just double it.
+//        $cacheTTL = $session->getSessionTTL() * 2;
+//        $person = null;
 //
-//        $postEvent = new PersonPagePostEvent($person, $attributes);
-//        $this->eventDispatcher->dispatch($postEvent);
-//
-//        return $person;
-//    }
-
-//    /**
-//     * @thorws ApiError
-//     */
-//    public function getPerson(string $id, array $options = []): Person
-//    {
-//        $this->eventDispatcher->onNewOperation($options);
-//
-//        // extract username in case $id is an iri, e.g. /base/people/{user}
-//        $parts = explode('/', $id);
-//        $id = $parts[count($parts) - 1];
-//
-//        $session = $this->getUserSession();
-//        $currentIdentifier = $session->getUserIdentifier();
-//
-//        if ($currentIdentifier !== null && $currentIdentifier === $id) {
-//            // fast path
-//            $person = $this->getCurrentPersonCached(true);
-//            assert($person !== null);
-//        } else {
-//            $user = $this->getPersonUserItem($id);
-//            $person = $this->personFromUserItem($user);
-//            if ($person === null) {
-//                throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Person with id '%s' could not be found!", $id));
+//        $item = $cache->getItem($cacheKey);
+//        if ($item->isHit()) {
+//            $cachedPerson = $item->get();
+//            if (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($cachedPerson)) {
+//                $person = $cachedPerson;
 //            }
 //        }
 //
-//        return $person;
+//        if ($person === null) {
+//            try {
+//                $user = $this->getPersonUserItem($currentIdentifier);
+//                $person = $this->personFromUserItem($user);
+//            } catch (ApiError $exc) {
+//                if ($exc->getStatusCode() !== Response::HTTP_NOT_FOUND) {
+//                    throw $exc;
+//                }
+//            }
+//            $item->set($person);
+//            $item->expiresAfter($cacheTTL);
+//            $cache->save($item);
+//        }
+//
+//        $this->currentPerson = $person;
+//
+//        if ($this->currentPerson === null) {
+//            throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Current person with id '%s' could not be found!", $currentIdentifier));
+//        }
+//
+//        return $this->currentPerson;
 //    }
-
-    private function getUserSession(): UserSessionInterface
-    {
-        return $this->locator->get(UserSessionInterface::class);
-    }
-
-    /**
-     * @thorws ApiError
-     */
-    private function getCurrentPersonCached(bool $checkLocalDataAttributes): ?Person
-    {
-        $session = $this->getUserSession();
-        $currentIdentifier = $session->getUserIdentifier();
-        if ($currentIdentifier === null) {
-            return null;
-        }
-
-        if ($this->currentPerson) {
-            if ($this->currentPerson->getIdentifier() === $currentIdentifier &&
-                (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($this->currentPerson))) {
-                return $this->currentPerson;
-            }
-            $this->currentPerson = null;
-        }
-
-        $cache = $this->personCache;
-        $cacheKey = $session->getSessionCacheKey().'-'.$currentIdentifier;
-        // make sure the cache is longer than the session, so just double it.
-        $cacheTTL = $session->getSessionTTL() * 2;
-        $person = null;
-
-        $item = $cache->getItem($cacheKey);
-        if ($item->isHit()) {
-            $cachedPerson = $item->get();
-            if (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($cachedPerson)) {
-                $person = $cachedPerson;
-            }
-        }
-
-        if ($person === null) {
-            try {
-                $user = $this->getPersonUserItem($currentIdentifier);
-                $person = $this->personFromUserItem($user);
-            } catch (ApiError $exc) {
-                if ($exc->getStatusCode() !== Response::HTTP_NOT_FOUND) {
-                    throw $exc;
-                }
-            }
-            $item->set($person);
-            $item->expiresAfter($cacheTTL);
-            $cache->save($item);
-        }
-
-        $this->currentPerson = $person;
-
-        if ($this->currentPerson === null) {
-            throw ApiError::withDetails(Response::HTTP_NOT_FOUND, sprintf("Current person with id '%s' could not be found!", $currentIdentifier));
-        }
-
-        return $this->currentPerson;
-    }
-
-    /**
-     * @thorws ApiError
-     */
-    public function getCurrentPerson(array $options): ?Person
-    {
-        $this->eventDispatcher->onNewOperation($options);
-
-        return $this->getCurrentPersonCached(count(Options::getLocalDataAttributes($options)) > 0);
-    }
-
-    public static function getSubscribedServices(): array
-    {
-        return [
-            UserSessionInterface::class,
-        ];
-    }
 
     protected function createItemCreatedEvent(object $item, array $itemData): ?AbstractItemCreatedEvent
     {
         return new PersonItemCreatedEvent($item, $itemData);
     }
 
-    protected function getItemDataById(string $id, array $filters, array $options): ?array
+    protected function getItemDataById(string $id, array $options): ?array
     {
-        return $this->getUserItemData($this->getPersonUserItem($id));
+        return $this->getPersonItemData($this->getPersonUserItem($id));
     }
 
     /**
      * @throws FilterException
      */
-    protected function getItemDataPage(int $currentPageNumber, int $maxNumItemsPerPage, array $filters = [], array $options = []): array
+    protected function getItemDataCollection(int $currentPageNumber, int $maxNumItemsPerPage, array $options = []): array
     {
         $filter = Options::getFilter($options) ?? Filter::create();
 
@@ -514,13 +420,13 @@ class LDAPApi extends AbstractDataProviderConnector implements LoggerAwareInterf
 
         $personDataPage = [];
         foreach ($this->getPeopleUserItems($currentPageNumber, $maxNumItemsPerPage, $filter) as $userItem) {
-            $personDataPage[] = $this->getUserItemData($userItem);
+            $personDataPage[] = $this->getPersonItemData($userItem);
         }
 
         return $personDataPage;
     }
 
-    private function getUserItemData(User $user): array
+    private function getPersonItemData(User $user): array
     {
         // Remove all values with numeric keys
         return array_filter($user->getAttributes(), function ($key) {
