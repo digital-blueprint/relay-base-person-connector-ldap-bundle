@@ -297,7 +297,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
 
             self::addFilterToQuery($query, $filter->getRootNode(), $this->attributeMapper);
 
-            //dump($query->getUnescapedQuery());
+            // dump($query->getUnescapedQuery());
 
             // API platform's first page is 1, Adldap's first page is 0
             $currentPageIndex = $currentPageNumber - 1;
@@ -382,7 +382,7 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
             }
 
             assert($identifier === $user->getFirstAttribute(
-                    $this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY)));
+                $this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY)));
 
             return $user;
         } catch (BindException $e) {
@@ -404,9 +404,9 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         $person = new Person();
         $person->setIdentifier($identifier);
         $person->setGivenName($user->getFirstAttribute(
-                $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY)) ?? '');
+            $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY)) ?? '');
         $person->setFamilyName($user->getFirstAttribute(
-                $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY)) ?? '');
+            $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY)) ?? '');
 
         // Remove all values with numeric keys
         $attributes = array_filter($user->getAttributes(), function ($key) {
@@ -465,8 +465,8 @@ class LDAPApi implements LoggerAwareInterface, ServiceSubscriberInterface
         }
 
         if ($this->currentPerson) {
-            if ($this->currentPerson->getIdentifier() === $currentIdentifier &&
-                (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($this->currentPerson))) {
+            if ($this->currentPerson->getIdentifier() === $currentIdentifier
+                && (!$checkLocalDataAttributes || $this->eventDispatcher->checkRequestedAttributesIdentical($this->currentPerson))) {
                 return $this->currentPerson;
             }
             $this->currentPerson = null;

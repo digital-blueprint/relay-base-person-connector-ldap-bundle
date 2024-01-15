@@ -14,7 +14,6 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils\TestPersonEventSubscriber;
 use Dbp\Relay\CoreBundle\Rest\Options;
-use Mockery;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class PersonTest extends ApiTestCase
@@ -66,7 +65,7 @@ class PersonTest extends ApiTestCase
 
     protected function newBuilder()
     {
-        $connection = Mockery::mock(ConnectionInterface::class);
+        $connection = \Mockery::mock(ConnectionInterface::class);
 
         return new Builder($connection, new Grammar());
     }
