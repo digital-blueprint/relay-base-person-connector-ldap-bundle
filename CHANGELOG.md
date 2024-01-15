@@ -1,3 +1,7 @@
+# v0.4.10
+
+* Drop support for PHP 7.3
+
 # v0.4.6
 
 * Use the global "cache.app" adapter for caching instead of always using the filesystem adapter
