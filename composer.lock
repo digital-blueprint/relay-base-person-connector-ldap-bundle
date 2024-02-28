@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "10ad1fe083779362660ef9a30646c371",
+    "content-hash": "553afe8dfba980abcbe087d072feb137",
     "packages": [
         {
             "name": "adldap2/adldap2",
@@ -7259,6 +7259,7 @@
                     "type": "patreon"
                 }
             ],
+            "abandoned": "web-token/jwt-library",
             "time": "2021-03-17T14:55:52+00:00"
         },
         {
@@ -7335,6 +7336,7 @@
                     "type": "patreon"
                 }
             ],
+            "abandoned": "web-token/jwt-library",
             "time": "2021-03-17T14:55:52+00:00"
         },
         {
@@ -7411,6 +7413,7 @@
                     "type": "patreon"
                 }
             ],
+            "abandoned": "web-token/jwt-library",
             "time": "2021-03-01T19:55:28+00:00"
         },
         {
@@ -7485,6 +7488,7 @@
                     "type": "patreon"
                 }
             ],
+            "abandoned": "web-token/jwt-library",
             "time": "2021-01-21T19:18:03+00:00"
         },
         {
