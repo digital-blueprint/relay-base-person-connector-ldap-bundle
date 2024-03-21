@@ -15,6 +15,6 @@ class PersonEventSubscriber extends AbstractLocalDataEventSubscriber
         return [
             PersonPreEvent::class,
             PersonPostEvent::class,
-            ];
+        ];
     }
 }
