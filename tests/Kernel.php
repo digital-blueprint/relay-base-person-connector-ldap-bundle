@@ -8,6 +8,7 @@ use ApiPlatform\Symfony\Bundle\ApiPlatformBundle;
 use Dbp\Relay\BasePersonBundle\DbpRelayBasePersonBundle;
 use Dbp\Relay\BasePersonConnectorLdapBundle\DbpRelayBasePersonConnectorLdapBundle;
 use Dbp\Relay\CoreBundle\DbpRelayCoreBundle;
+use Dbp\Relay\CoreConnectorLdapBundle\DbpRelayCoreConnectorLdapBundle;
 use Nelmio\CorsBundle\NelmioCorsBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
@@ -29,6 +30,7 @@ class Kernel extends BaseKernel
         yield new MonologBundle();
         yield new DbpRelayBasePersonBundle();
         yield new DbpRelayCoreBundle();
+        yield new DbpRelayCoreConnectorLdapBundle();
         yield new DbpRelayBasePersonConnectorLdapBundle();
         yield new NelmioCorsBundle();
         yield new SecurityBundle();

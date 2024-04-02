@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests;
 
-use Adldap\Connections\ConnectionInterface;
-use Adldap\Models\User as AdldapUser;
-use Adldap\Query\Builder;
-use Adldap\Query\Grammar;
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils\TestPersonEventSubscriber;
+use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Rest\Options;
+use Dbp\Relay\CoreBundle\TestUtils\TestUserSession;
+use Dbp\Relay\CoreConnectorLdapBundle\Ldap\LdapConnectionProvider;
+use Dbp\Relay\CoreConnectorLdapBundle\Ldap\TestLdapConnection;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class PersonTest extends ApiTestCase
@@ -21,15 +21,9 @@ class PersonTest extends ApiTestCase
     private const EMAIL_ATTRIBUTE_NAME = 'email';
     private const BIRTHDATE_ATTRIBUTE_NAME = 'birthDate';
 
-    /**
-     * @var LDAPApi
-     */
-    private $ldapApi;
-
-    /**
-     * @var LDAPPersonProvider
-     */
-    private $provider;
+    private ?LDAPApi $ldapApi = null;
+    private ?LDAPPersonProvider $personProvider = null;
+    private ?TestLdapConnection $testLdapConnection = null;
 
     protected function setUp(): void
     {
@@ -43,103 +37,195 @@ class PersonTest extends ApiTestCase
         $eventDispatcher->addSubscriber($customPersonEventSubscriber);
         $eventDispatcher->addSubscriber($localDataEventSubscriber);
 
-        $this->ldapApi = new LDAPApi(self::createClient()->getContainer(), $eventDispatcher);
+        $LDAP_CONNECTION_IDENTIFIER = 'test_connection';
+        $ldapConnectionProvider = new LdapConnectionProvider();
+        $this->testLdapConnection = $ldapConnectionProvider->addTestConnection($LDAP_CONNECTION_IDENTIFIER);
+
+        $this->ldapApi = new LDAPApi(new TestUserSession(), $eventDispatcher, $ldapConnectionProvider);
         $this->ldapApi->setConfig([
             'ldap' => [
-                'encryption' => 'simple_tls',
+                'connection' => $LDAP_CONNECTION_IDENTIFIER,
                 'attributes' => [
+                    'identifier' => 'id',
+                    'given_name' => 'given_name',
+                    'family_name' => 'family_name',
                     'email' => 'email',
                     'birthday' => 'dateofbirth',
                 ],
             ],
         ]);
 
-        $this->provider = new LDAPPersonProvider($this->ldapApi);
+        $this->personProvider = new LDAPPersonProvider($this->ldapApi);
     }
 
-    public function testBasic()
+    public function testGetPersonNotFound()
     {
-        $this->expectExceptionMessageMatches('/.*/');
-        $this->provider->getPerson('____nope____');
+        try {
+            $this->personProvider->getPerson('____nope____');
+            $this->fail('exception not thrown as expected');
+        } catch (ApiError $apiError) {
+            $this->assertEquals(404, $apiError->getStatusCode());
+        }
     }
 
-    protected function newBuilder()
+    public function testGetPerson()
     {
-        $connection = \Mockery::mock(ConnectionInterface::class);
+        $this->testLdapConnection->setTestEntries([[
+            'id' => ['foobar'],
+            'given_name' => ['John'],
+            'family_name' => ['Doe'],
+        ]]);
 
-        return new Builder($connection, new Grammar());
-    }
-
-    public function testLDAPParsing()
-    {
-        $user = new AdldapUser([
-            'cn' => ['foobar'],
-            'givenName' => ['John'],
-            'sn' => ['Doe'],
-        ], $this->newBuilder());
-
-        $person = $this->ldapApi->personFromUserItem($user);
+        $person = $this->personProvider->getPerson('foobar');
         $this->assertEquals('John', $person->getGivenName());
         $this->assertEquals('Doe', $person->getFamilyName());
     }
 
-    public function testLocalDataAttributeBirthDate()
+    public function testLocalDataAttributes()
     {
-        $options = [];
-        Options::requestLocalDataAttributes($options, [self::BIRTHDATE_ATTRIBUTE_NAME]);
-        $this->ldapApi->getEventDispatcher()->onNewOperation($options);
-
-        $user = new AdldapUser([
-            'cn' => ['foobar'],
-            'dateofbirth' => ['1994-06-24 00:00:00'],
-            'givenName' => ['givenName'],
-            'sn' => ['familyName'],
-        ], $this->newBuilder());
-
-        $person = $this->ldapApi->personFromUserItem($user);
-        $this->assertEquals('1994-06-24 00:00:00', $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
-    }
-
-    public function testLocalDataAttributeEmail()
-    {
-        $options = [];
-        Options::requestLocalDataAttributes($options, [self::EMAIL_ATTRIBUTE_NAME]);
-        $this->ldapApi->getEventDispatcher()->onNewOperation($options);
-
         $EMAIL = 'john@doe.com';
-        $user = new AdldapUser([
-            'cn' => ['johndoe'],
-            'givenName' => ['John'],
-            'sn' => ['Doe'],
+        $BIRTHDATE = '1994-06-24 00:00:00';
+        $this->testLdapConnection->setTestEntries([[
+            'id' => ['foobar'],
             'email' => [$EMAIL],
-        ], $this->newBuilder());
+            'dateofbirth' => [$BIRTHDATE],
+            'given_name' => ['John'],
+            'family_name' => ['Doe'],
+        ]]);
 
-        $person = $this->ldapApi->personFromUserItem($user);
+        $options = [];
+        $person = $this->personProvider->getPerson('foobar',
+            Options::requestLocalDataAttributes($options, [self::BIRTHDATE_ATTRIBUTE_NAME, self::EMAIL_ATTRIBUTE_NAME]));
+        $this->assertEquals('John', $person->getGivenName());
+        $this->assertEquals('Doe', $person->getFamilyName());
+        $this->assertEquals($BIRTHDATE, $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
         $this->assertEquals($EMAIL, $person->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
     }
 
     public function testCustomPostEventSubscriber()
     {
-        $user = new AdldapUser([
-            'cn' => ['foobar'],
-            'givenName' => ['givenName'],
-            'sn' => ['familyName'],
-        ], $this->newBuilder());
+        $this->testLdapConnection->setTestEntries([[
+            'id' => ['foobar'],
+            'given_name' => ['John'],
+            'family_name' => ['Doe'],
+        ]]);
 
-        $person = $this->ldapApi->personFromUserItem($user);
+        $person = $this->personProvider->getPerson('foobar');
 
         $this->assertEquals('my-test-string', $person->getLocalDataValue('test'));
     }
 
-    public function testPersonFromUserItemNoIdentifier()
+    public function testGetPersonCollection()
     {
-        $user = new AdldapUser([
-            'givenName' => ['givenName'],
-            'sn' => ['familyName'],
-        ], $this->newBuilder());
+        $this->testLdapConnection->setTestEntries([
+            [
+                'id' => ['foo'],
+                'given_name' => ['John'],
+                'family_name' => ['Doe'],
+            ],
+            [
+                'id' => ['bar'],
+                'given_name' => ['Joni'],
+                'family_name' => ['Mitchell'],
+            ],
+            [
+                'id' => ['baz'],
+                'given_name' => ['Toni'],
+                'family_name' => ['Lu'],
+            ],
+        ]);
 
-        $person = $this->ldapApi->personFromUserItem($user);
-        $this->assertNull($person);
+        $persons = $this->personProvider->getPersons(1, 3);
+        $this->assertCount(3, $persons);
+        // NOTE: results must be sorted by family name
+        $this->assertEquals('foo', $persons[0]->getIdentifier());
+        $this->assertEquals('John', $persons[0]->getGivenName());
+        $this->assertEquals('Doe', $persons[0]->getFamilyName());
+
+        $this->assertEquals('baz', $persons[1]->getIdentifier());
+        $this->assertEquals('Toni', $persons[1]->getGivenName());
+        $this->assertEquals('Lu', $persons[1]->getFamilyName());
+
+        $this->assertEquals('bar', $persons[2]->getIdentifier());
+        $this->assertEquals('Joni', $persons[2]->getGivenName());
+        $this->assertEquals('Mitchell', $persons[2]->getFamilyName());
+    }
+
+    public function testGetPersonCollectionPaginated()
+    {
+        $this->testLdapConnection->setTestEntries([
+            [
+                'id' => ['foo'],
+                'given_name' => ['John'],
+                'family_name' => ['Doe'],
+            ],
+            [
+                'id' => ['bar'],
+                'given_name' => ['Joni'],
+                'family_name' => ['Mitchell'],
+            ],
+            [
+                'id' => ['baz'],
+                'given_name' => ['Toni'],
+                'family_name' => ['Lu'],
+            ],
+        ]);
+
+        $persons = $this->personProvider->getPersons(2, 2);
+        $this->assertCount(1, $persons);
+        // NOTE: results must be sorted by family name
+        $this->assertEquals('bar', $persons[0]->getIdentifier());
+        $this->assertEquals('Joni', $persons[0]->getGivenName());
+        $this->assertEquals('Mitchell', $persons[0]->getFamilyName());
+    }
+
+    public function testGetPersonCollectionWithLocalData()
+    {
+        $this->testLdapConnection->setTestEntries([
+            [
+                'id' => ['foo'],
+                'given_name' => ['John'],
+                'family_name' => ['Doe'],
+                'email' => ['john@doe.com'],
+                'dateofbirth' => ['1994-06-24 00:00:00'],
+            ],
+            [
+                'id' => ['bar'],
+                'given_name' => ['Joni'],
+                'family_name' => ['Mitchell'],
+                'email' => ['joni@mitchell.com'],
+            ],
+            [
+                'id' => ['baz'],
+                'given_name' => ['Toni'],
+                'family_name' => ['Lu'],
+                'dateofbirth' => [],
+            ],
+        ]);
+
+        $options = [];
+        $persons = $this->personProvider->getPersons(1, 3,
+            Options::requestLocalDataAttributes($options, [self::BIRTHDATE_ATTRIBUTE_NAME, self::EMAIL_ATTRIBUTE_NAME]));
+        $this->assertCount(3, $persons);
+
+        // NOTE: results must be sorted by family name
+        $this->assertEquals('foo', $persons[0]->getIdentifier());
+        $this->assertEquals('John', $persons[0]->getGivenName());
+        $this->assertEquals('Doe', $persons[0]->getFamilyName());
+        $this->assertEquals('1994-06-24 00:00:00', $persons[0]->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
+        $this->assertEquals('john@doe.com', $persons[0]->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
+
+        $this->assertEquals('baz', $persons[1]->getIdentifier());
+        $this->assertEquals('Toni', $persons[1]->getGivenName());
+        $this->assertEquals('Lu', $persons[1]->getFamilyName());
+        $this->assertEquals(null, $persons[1]->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
+        $this->assertEquals(null, $persons[1]->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
+
+        $this->assertEquals('bar', $persons[2]->getIdentifier());
+        $this->assertEquals('Joni', $persons[2]->getGivenName());
+        $this->assertEquals('Mitchell', $persons[2]->getFamilyName());
+        $this->assertEquals(null, $persons[2]->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
+        $this->assertEquals('joni@mitchell.com', $persons[2]->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
     }
 
     private static function createLocalDataMappingConfig(): array

@@ -40,8 +40,7 @@ class HealthCheck implements CheckInterface
     public function check(CheckOptions $options): array
     {
         $results = [];
-        $results[] = $this->checkMethod('Check if we can connect to the LDAP server', [$this->ldap, 'checkConnection']);
-        $results[] = $this->checkMethod('Check if all attributes are available', [$this->ldap, 'checkAttributes']);
+        $results[] = $this->checkMethod('Check if all attributes are available', [$this->ldap, 'assertAttributesExist']);
 
         return $results;
     }
