@@ -390,16 +390,16 @@
         },
         {
             "name": "dbp/relay-core-connector-ldap-bundle",
-            "version": "v0.2.0",
+            "version": "v0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle.git",
-                "reference": "3b43a123cda28547679698df76471e6a720759af"
+                "reference": "30190056824e61ce07b29d8395ae9bbd443a764a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/3b43a123cda28547679698df76471e6a720759af",
-                "reference": "3b43a123cda28547679698df76471e6a720759af",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/30190056824e61ce07b29d8395ae9bbd443a764a",
+                "reference": "30190056824e61ce07b29d8395ae9bbd443a764a",
                 "shasum": ""
             },
             "require": {
@@ -440,9 +440,9 @@
             "description": "A template bundle for the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.0"
+                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.1"
             },
-            "time": "2024-04-02T17:11:19+00:00"
+            "time": "2024-04-04T18:47:16+00:00"
         },
         {
             "name": "directorytree/ldaprecord",

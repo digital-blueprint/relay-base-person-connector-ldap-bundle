@@ -198,7 +198,7 @@ class LDAPApi implements LoggerAwareInterface
         try {
             return $this->getLdapConnection()->getEntryByAttribute($this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY), $identifier);
         } catch (LdapException $ldapException) {
-            if ($ldapException->getCode() === LdapException::USER_NOT_FOUND) {
+            if ($ldapException->getCode() === LdapException::ENTRY_NOT_FOUND) {
                 throw ApiError::withDetails(Response::HTTP_NOT_FOUND,
                     sprintf("Person with id '%s' could not be found!", $identifier));
             }
