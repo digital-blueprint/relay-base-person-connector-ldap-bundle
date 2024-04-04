@@ -1,3 +1,8 @@
+# v0.5.0
+
+* Remove direct LDAP (abandoned Adldap2) dependency and use the LDAP API from dbp/relay-core-connector-ldap-bundle (requires config update)
+* Add support for sorting to the person collection request
+
 # v0.4.12
 
 * Add support for Symfony 6
