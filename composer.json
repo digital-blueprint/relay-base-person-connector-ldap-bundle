@@ -7,7 +7,7 @@
         "ext-json": "*",
         "dbp/relay-base-person-bundle": "^0.2.26",
         "dbp/relay-core-bundle": "^0.1.150",
-        "dbp/relay-core-connector-ldap-bundle": "dev-main",
+        "dbp/relay-core-connector-ldap-bundle": "^0.2.0",
         "psr/container": "^1.1 || ^2",
         "psr/log": "^1.1.4 || ^2.0 || ^3.0",
         "symfony/cache": "^5.4 || ^6.4",

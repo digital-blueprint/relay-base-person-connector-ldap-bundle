@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e584ce9aef92b3ba4fd2aebe583e417a",
+    "content-hash": "2fc8e2653d4a3811b71509b55b2ad332",
     "packages": [
         {
             "name": "api-platform/core",
@@ -390,16 +390,16 @@
         },
         {
             "name": "dbp/relay-core-connector-ldap-bundle",
-            "version": "dev-main",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle.git",
-                "reference": "a9425b854870b928927d2fe20aa36b9ec6c4bfbf"
+                "reference": "3b43a123cda28547679698df76471e6a720759af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/a9425b854870b928927d2fe20aa36b9ec6c4bfbf",
-                "reference": "a9425b854870b928927d2fe20aa36b9ec6c4bfbf",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/3b43a123cda28547679698df76471e6a720759af",
+                "reference": "3b43a123cda28547679698df76471e6a720759af",
                 "shasum": ""
             },
             "require": {
@@ -427,7 +427,6 @@
                 "symfony/phpunit-bridge": "^5.4 || ^6.4",
                 "vimeo/psalm": "^5.22.2"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -441,9 +440,9 @@
             "description": "A template bundle for the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/main"
+                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.0"
             },
-            "time": "2024-04-02T12:40:35+00:00"
+            "time": "2024-04-02T17:11:19+00:00"
         },
         {
             "name": "directorytree/ldaprecord",
@@ -10619,9 +10618,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "dbp/relay-core-connector-ldap-bundle": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

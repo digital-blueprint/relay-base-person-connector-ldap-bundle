@@ -57,7 +57,7 @@ class LDAPApi implements LoggerAwareInterface
         $this->ldapConnectionProvider = $ldapConnectionProvider;
     }
 
-    public function setConfig(array $config)
+    public function setConfig(array $config): void
     {
         $this->ldapConnectionIdentifier = $config[Configuration::LDAP_ATTRIBUTE][Configuration::LDAP_CONNECTION_ATTRIBUTE];
 
@@ -76,26 +76,12 @@ class LDAPApi implements LoggerAwareInterface
 
     public function assertAttributesExist()
     {
-        $attributes = [
-            $this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY),
-            $this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY),
-            $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY),
-        ];
-
-        $this->getLdapConnection()->assertAttributesExist($attributes);
+        $this->getLdapConnection()->assertAttributesExist(array_values($this->attributeMapper->getMappingEntries()));
     }
 
-    public function setPersonCache(?CacheItemPoolInterface $cachePool)
+    public function setPersonCache(?CacheItemPoolInterface $cachePool): void
     {
         $this->personCache = $cachePool;
-    }
-
-    /**
-     * For unit testing only.
-     */
-    public function getEventDispatcher(): LocalDataEventDispatcher
-    {
-        return $this->eventDispatcher;
     }
 
     /*
@@ -116,6 +102,8 @@ class LDAPApi implements LoggerAwareInterface
             $preEvent = new PersonPreEvent($options);
             $this->eventDispatcher->dispatch($preEvent);
             $options = $preEvent->getOptions();
+            $ldapOptions = [];
+
             if ($filter = Options::getFilter($options)) {
                 self::replaceAttributeNamesByLdapAttributeNames($filter->getRootNode(), $this->attributeMapper);
             } else {
@@ -136,11 +124,25 @@ class LDAPApi implements LoggerAwareInterface
                 }
             }
 
-            $ldapOptions = [];
-            Options::setFilter($ldapOptions, $filter);
-            // TODO: sorting should be requested by the base person bundle instead of here (mapping of attribute names required!):
-            Options::setSorting($ldapOptions, new Sorting([Sorting::createSortField(
-                $this->attributeMapper->getTargetAttributePath(self::FAMILY_NAME_ATTRIBUTE_KEY))]));
+            if ($filter->isEmpty() === false) {
+                Options::setFilter($ldapOptions, $filter);
+            }
+
+            $sorting = Options::getSorting($options);
+            if ($sorting !== null && count($sorting->getSortFields()) > 0) {
+                $sortField = Sorting::getPath($sorting->getSortFields()[0]);
+            } else {
+                // TODO: sorting should be requested by the client, or at least by
+                // the base person bundle instead of here (mapping of attribute names required!):
+                $sortField = self::FAMILY_NAME_ATTRIBUTE_KEY;
+            }
+
+            $targetSortField = $this->attributeMapper->getTargetAttributePath($sortField);
+            if ($targetSortField === null) {
+                throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'undefined person attribute to sort by: '.$sortField);
+            } else {
+                Options::setSorting($ldapOptions, new Sorting([Sorting::createSortField($targetSortField)]));
+            }
 
             $persons = [];
             foreach ($this->getPersonEntries($currentPageNumber, $maxNumItemsPerPage, $ldapOptions) as $userItem) {
@@ -207,9 +209,43 @@ class LDAPApi implements LoggerAwareInterface
     }
 
     /**
+     * @thorws ApiError
+     */
+    public function getPerson(string $id, array $options = []): Person
+    {
+        $this->eventDispatcher->onNewOperation($options);
+
+        $currentIdentifier = $this->userSession->getUserIdentifier();
+        if ($currentIdentifier !== null && $currentIdentifier === $id) {
+            // fast path
+            $person = $this->getCurrentPersonCached(true);
+            assert($person !== null);
+        } else {
+            $personEntry = $this->getPersonEntry($id);
+            $person = $this->personFromLdapEntry($personEntry);
+            // this should never happen (since we have searched by identifier):
+            if ($person === null) {
+                throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'identifier missing in LDAP entry');
+            }
+        }
+
+        return $person;
+    }
+
+    /**
+     * @thorws ApiError
+     */
+    public function getCurrentPerson(array $options): ?Person
+    {
+        $this->eventDispatcher->onNewOperation($options);
+
+        return $this->getCurrentPersonCached(count(Options::getLocalDataAttributes($options)) > 0);
+    }
+
+    /**
      * Returns null in case the user is not a valid Person, for example if the identifier is missing.
      */
-    public function personFromLdapEntry(LdapEntryInterface $ldapEntry): ?Person
+    private function personFromLdapEntry(LdapEntryInterface $ldapEntry): ?Person
     {
         $identifier = $ldapEntry->getFirstAttributeValue(
             $this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY));
@@ -231,30 +267,6 @@ class LDAPApi implements LoggerAwareInterface
 
         $postEvent = new PersonPostEvent($person, $attributes);
         $this->eventDispatcher->dispatch($postEvent);
-
-        return $person;
-    }
-
-    /**
-     * @thorws ApiError
-     */
-    public function getPerson(string $id, array $options = []): Person
-    {
-        $this->eventDispatcher->onNewOperation($options);
-
-        $currentIdentifier = $this->userSession->getUserIdentifier();
-        if ($currentIdentifier !== null && $currentIdentifier === $id) {
-            // fast path
-            $person = $this->getCurrentPersonCached(true);
-            assert($person !== null);
-        } else {
-            $personEntry = $this->getPersonEntry($id);
-            $person = $this->personFromLdapEntry($personEntry);
-            // this should never happen (since we have searched by identifier):
-            if ($person === null) {
-                throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'identifier missing in LDAP entry');
-            }
-        }
 
         return $person;
     }
@@ -319,23 +331,17 @@ class LDAPApi implements LoggerAwareInterface
     }
 
     /**
-     * @thorws ApiError
-     */
-    public function getCurrentPerson(array $options): ?Person
-    {
-        $this->eventDispatcher->onNewOperation($options);
-
-        return $this->getCurrentPersonCached(count(Options::getLocalDataAttributes($options)) > 0);
-    }
-
-    /**
      * @throws FilterException
      */
-    private static function replaceAttributeNamesByLdapAttributeNames(LogicalNode $logicalNode, AttributeMapper $attributeMapper)
+    private static function replaceAttributeNamesByLdapAttributeNames(LogicalNode $logicalNode, AttributeMapper $attributeMapper): void
     {
         foreach ($logicalNode->getChildren() as $childNode) {
             if ($childNode instanceof ConditionNode) {
-                $childNode->setField($attributeMapper->getTargetAttributePath($childNode->getField()));
+                $targetField = $attributeMapper->getTargetAttributePath($childNode->getField());
+                if ($targetField === null) {
+                    throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'undefined person attribute to filter by: '.$childNode->getField());
+                }
+                $childNode->setField($targetField);
             } elseif ($childNode instanceof LogicalNode) {
                 self::replaceAttributeNamesByLdapAttributeNames($childNode, $attributeMapper);
             }
