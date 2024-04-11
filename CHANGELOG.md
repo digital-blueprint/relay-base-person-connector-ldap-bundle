@@ -1,3 +1,7 @@
+# v0.5.3
+
+* Add support for api-platform 3.2
+
 # v0.5.0
 
 * Remove direct LDAP (abandoned Adldap2) dependency and use the LDAP API from dbp/relay-core-connector-ldap-bundle (requires config update)
