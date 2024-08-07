@@ -20,7 +20,7 @@ use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterException;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterTreeBuilder;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\ConditionNode;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\LogicalNode;
-use Dbp\Relay\CoreBundle\Rest\Query\Sorting\Sorting;
+use Dbp\Relay\CoreBundle\Rest\Query\Sort\Sort;
 use Dbp\Relay\CoreConnectorLdapBundle\Ldap\LdapConnection;
 use Dbp\Relay\CoreConnectorLdapBundle\Ldap\LdapConnectionProvider;
 use Dbp\Relay\CoreConnectorLdapBundle\Ldap\LdapEntryInterface;
@@ -128,21 +128,24 @@ class LDAPApi implements LoggerAwareInterface
                 Options::setFilter($ldapOptions, $filter);
             }
 
-            $sorting = Options::getSorting($options);
-            if ($sorting !== null && count($sorting->getSortFields()) > 0) {
-                $sortField = Sorting::getPath($sorting->getSortFields()[0]);
-            } else {
+            $sortFields = Options::getSort($options)?->getSortFields();
+            if (empty($sortFields)) {
                 // TODO: sorting should be requested by the client, or at least by
                 // the base person bundle instead of here (mapping of attribute names required!):
-                $sortField = self::FAMILY_NAME_ATTRIBUTE_KEY;
+                $sortFields = [
+                    Sort::createSortField(self::FAMILY_NAME_ATTRIBUTE_KEY, Sort::ASCENDING_DIRECTION),
+                ];
             }
 
-            $targetSortField = $this->attributeMapper->getTargetAttributePath($sortField);
-            if ($targetSortField === null) {
-                throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'undefined person attribute to sort by: '.$sortField);
-            } else {
-                Options::setSorting($ldapOptions, new Sorting([Sorting::createSortField($targetSortField)]));
+            $targetSortFields = [];
+            foreach ($sortFields as $sortField) {
+                $targetSortAttributePath = $this->attributeMapper->getTargetAttributePath(Sort::getPath($sortField));
+                if ($targetSortAttributePath === null) {
+                    throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'undefined person attribute to sort by: '.Sort::getPath($sortField));
+                }
+                $targetSortFields[] = Sort::createSortField($targetSortAttributePath, Sort::getDirection($sortField));
             }
+            Options::setSort($ldapOptions, new Sort($targetSortFields));
 
             $persons = [];
             foreach ($this->getPersonEntries($currentPageNumber, $maxNumItemsPerPage, $ldapOptions) as $userItem) {

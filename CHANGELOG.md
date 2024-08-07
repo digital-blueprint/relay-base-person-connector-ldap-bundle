@@ -1,3 +1,10 @@
+# Unreleased
+
+# v0.5.4
+
+* Update core and core-connector-ldap
+* Add support for sort by multiple attributes
+
 # v0.5.3
 
 * Add support for api-platform 3.2
