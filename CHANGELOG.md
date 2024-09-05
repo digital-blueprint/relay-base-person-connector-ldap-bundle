@@ -1,5 +1,10 @@
 # Unreleased
 
+# v0.5.6
+
+* Fixes in case the provider is called in an unauthenticated context like health checks
+* Make sure to ignore service accounts when caching the Person for the current user
+
 # v0.5.5
 
 * Update core and core-connector-ldap
