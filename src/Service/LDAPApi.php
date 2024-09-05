@@ -218,7 +218,11 @@ class LDAPApi implements LoggerAwareInterface
     {
         $this->eventDispatcher->onNewOperation($options);
 
-        $currentIdentifier = $this->userSession->getUserIdentifier();
+        $currentIdentifier = null;
+        if ($this->userSession->isAuthenticated() && !$this->userSession->isServiceAccount()) {
+            $currentIdentifier = $this->userSession->getUserIdentifier();
+        }
+
         if ($currentIdentifier !== null && $currentIdentifier === $id) {
             // fast path
             $person = $this->getCurrentPersonCached(true);
@@ -280,7 +284,7 @@ class LDAPApi implements LoggerAwareInterface
     private function getCurrentPersonCached(bool $checkLocalDataAttributes): ?Person
     {
         $currentIdentifier = $this->userSession->getUserIdentifier();
-        if ($currentIdentifier === null) {
+        if ($currentIdentifier === null || $this->userSession->isServiceAccount()) {
             return null;
         }
 

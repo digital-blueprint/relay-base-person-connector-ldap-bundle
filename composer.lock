@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1539ebc64ef50e300df5c975ee1268f1",
+    "content-hash": "f2e5afe3bb9c9b39f9bb1f1cf34bb9ea",
     "packages": [
         {
             "name": "api-platform/core",
@@ -319,16 +319,16 @@
         },
         {
             "name": "dbp/relay-core-bundle",
-            "version": "v0.1.179",
+            "version": "v0.1.180",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-bundle.git",
-                "reference": "963729991bdbf1feef51e319fa3e5bf970950748"
+                "reference": "a424b24d8613eef9bcb3e58fc203cde9902ec8fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-bundle/zipball/963729991bdbf1feef51e319fa3e5bf970950748",
-                "reference": "963729991bdbf1feef51e319fa3e5bf970950748",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-bundle/zipball/a424b24d8613eef9bcb3e58fc203cde9902ec8fe",
+                "reference": "a424b24d8613eef9bcb3e58fc203cde9902ec8fe",
                 "shasum": ""
             },
             "require": {
@@ -378,6 +378,7 @@
                 "api-platform/core": "2.7.17",
                 "carbonphp/carbon-doctrine-types": ">=3",
                 "dbp/relay-auth-bundle": "*",
+                "dbp/relay-core-connector-oidc-bundle": "<=0.1.33",
                 "doctrine/dbal": ">=4",
                 "symfony/amqp-messenger": ">=6.0 <6.4",
                 "symfony/property-info": ">=6.0 <6.4",
@@ -413,9 +414,9 @@
             "description": "The core bundle of the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-bundle/tree/v0.1.179"
+                "source": "https://github.com/digital-blueprint/relay-core-bundle/tree/v0.1.180"
             },
-            "time": "2024-08-20T11:43:21+00:00"
+            "time": "2024-09-05T12:36:41+00:00"
         },
         {
             "name": "dbp/relay-core-connector-ldap-bundle",
