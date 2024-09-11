@@ -40,7 +40,7 @@ class LDAPApi implements LoggerAwareInterface
     private const FAMILY_NAME_ATTRIBUTE_KEY = 'familyName';
     private const LOCAL_DATA_BASE_PATH = 'localData.';
 
-    private ?CacheItemPoolInterface $personCache;
+    private ?CacheItemPoolInterface $currentPersonCache;
     private ?Person $currentPerson = null;
     private AttributeMapper $attributeMapper;
     private LocalDataEventDispatcher $eventDispatcher;
@@ -81,7 +81,7 @@ class LDAPApi implements LoggerAwareInterface
 
     public function setPersonCache(?CacheItemPoolInterface $cachePool): void
     {
-        $this->personCache = $cachePool;
+        $this->currentPersonCache = $cachePool;
     }
 
     /*
@@ -214,21 +214,16 @@ class LDAPApi implements LoggerAwareInterface
     /**
      * @thorws ApiError
      */
-    public function getPerson(string $id, array $options = []): Person
+    public function getPerson(string $identifier, array $options = []): Person
     {
         $this->eventDispatcher->onNewOperation($options);
 
-        $currentIdentifier = null;
-        if ($this->userSession->isAuthenticated() && !$this->userSession->isServiceAccount()) {
-            $currentIdentifier = $this->userSession->getUserIdentifier();
-        }
-
-        if ($currentIdentifier !== null && $currentIdentifier === $id) {
-            // fast path
+        // fast path if requested person is the currently logged-in user
+        if ($this->userSession->isAuthenticated() && $this->userSession->getUserIdentifier() === $identifier) {
             $person = $this->getCurrentPersonCached(true);
             assert($person !== null);
         } else {
-            $personEntry = $this->getPersonEntry($id);
+            $personEntry = $this->getPersonEntry($identifier);
             $person = $this->personFromLdapEntry($personEntry);
             // this should never happen (since we have searched by identifier):
             if ($person === null) {
@@ -283,8 +278,9 @@ class LDAPApi implements LoggerAwareInterface
      */
     private function getCurrentPersonCached(bool $checkLocalDataAttributes): ?Person
     {
-        $currentIdentifier = $this->userSession->getUserIdentifier();
-        if ($currentIdentifier === null || $this->userSession->isServiceAccount()) {
+        if (!$this->userSession->isAuthenticated()
+            || $this->userSession->isServiceAccount()
+            || ($currentIdentifier = $this->userSession->getUserIdentifier()) === null) {
             return null;
         }
 
@@ -296,7 +292,7 @@ class LDAPApi implements LoggerAwareInterface
             $this->currentPerson = null;
         }
 
-        $cache = $this->personCache;
+        $cache = $this->currentPersonCache;
         $cacheKey = $this->userSession->getSessionCacheKey().'-'.$currentIdentifier;
         // make sure the cache is longer than the session, so just double it.
         $cacheTTL = $this->userSession->getSessionTTL() * 2;

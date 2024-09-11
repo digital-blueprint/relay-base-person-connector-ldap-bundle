@@ -1,5 +1,10 @@
 # Unreleased
 
+# v0.5.7
+
+* Add check if user is authenticated before requesting user identifier, to prevent internal exception on
+request of current person
+
 # v0.5.6
 
 * Fixes in case the provider is called in an unauthenticated context like health checks

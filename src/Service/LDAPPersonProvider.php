@@ -41,9 +41,9 @@ class LDAPPersonProvider implements PersonProviderInterface
      *
      * @throws ApiError
      */
-    public function getPerson(string $id, array $options = []): Person
+    public function getPerson(string $identifier, array $options = []): Person
     {
-        return $this->ldapApi->getPerson($id, $options);
+        return $this->ldapApi->getPerson($identifier, $options);
     }
 
     /**
