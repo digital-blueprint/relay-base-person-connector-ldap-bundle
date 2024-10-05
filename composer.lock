@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "api-platform/core",
-            "version": "v3.4.1",
+            "version": "v3.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/core.git",
-                "reference": "05f7d795252d32424b49336e5184557569809796"
+                "reference": "6dfa89bf228ea1fe5a0db0f9de3054018c4ef57e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/api-platform/core/zipball/05f7d795252d32424b49336e5184557569809796",
-                "reference": "05f7d795252d32424b49336e5184557569809796",
+                "url": "https://api.github.com/repos/api-platform/core/zipball/6dfa89bf228ea1fe5a0db0f9de3054018c4ef57e",
+                "reference": "6dfa89bf228ea1fe5a0db0f9de3054018c4ef57e",
                 "shasum": ""
             },
             "require": {
@@ -223,9 +223,9 @@
             ],
             "support": {
                 "issues": "https://github.com/api-platform/core/issues",
-                "source": "https://github.com/api-platform/core/tree/v3.4.1"
+                "source": "https://github.com/api-platform/core/tree/v3.4.2"
             },
-            "time": "2024-09-23T07:27:56+00:00"
+            "time": "2024-10-04T14:08:00+00:00"
         },
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -352,20 +352,20 @@
         },
         {
             "name": "dbp/relay-core-bundle",
-            "version": "v0.1.182",
+            "version": "v0.1.183",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-bundle.git",
-                "reference": "0809b2ca9293b2562c1719b11edf4960a172ac09"
+                "reference": "d7d803578a3b4a2bef1114d1cbbe245e98708995"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-bundle/zipball/0809b2ca9293b2562c1719b11edf4960a172ac09",
-                "reference": "0809b2ca9293b2562c1719b11edf4960a172ac09",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-bundle/zipball/d7d803578a3b4a2bef1114d1cbbe245e98708995",
+                "reference": "d7d803578a3b4a2bef1114d1cbbe245e98708995",
                 "shasum": ""
             },
             "require": {
-                "api-platform/core": "^2.7.18 || ^3.2.21",
+                "api-platform/core": "^3.2.21",
                 "dragonmantank/cron-expression": "^3.3.3",
                 "ext-fileinfo": "*",
                 "ext-intl": "*",
@@ -385,11 +385,11 @@
                 "symfony/dependency-injection": "^5.4 || ^6.4",
                 "symfony/error-handler": "^5.4 || ^6.4",
                 "symfony/event-dispatcher": "^5.4 || ^6.4.8",
-                "symfony/event-dispatcher-contracts": "^2.5 || ^3.5",
+                "symfony/event-dispatcher-contracts": "^3.5",
                 "symfony/expression-language": "^5.4 || ^6.4",
                 "symfony/filesystem": "^5.4 || ^6.4",
                 "symfony/framework-bundle": "^5.4 || ^6.4",
-                "symfony/http-client-contracts": "^2.5 || ^3.5",
+                "symfony/http-client-contracts": "^3.5",
                 "symfony/http-foundation": "^5.4 || ^6.4",
                 "symfony/http-kernel": "^5.4 || ^6.4",
                 "symfony/lock": "^5.4 || ^6.4",
@@ -447,22 +447,22 @@
             "description": "The core bundle of the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-bundle/tree/v0.1.182"
+                "source": "https://github.com/digital-blueprint/relay-core-bundle/tree/v0.1.183"
             },
-            "time": "2024-09-26T10:16:12+00:00"
+            "time": "2024-10-02T11:39:19+00:00"
         },
         {
             "name": "dbp/relay-core-connector-ldap-bundle",
-            "version": "v0.2.6",
+            "version": "v0.2.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle.git",
-                "reference": "4c5531836e24e56efa1877377003ec6ce7d765bc"
+                "reference": "1da0f10cfdc7c7a862a41d0df174fc64838762a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/4c5531836e24e56efa1877377003ec6ce7d765bc",
-                "reference": "4c5531836e24e56efa1877377003ec6ce7d765bc",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/1da0f10cfdc7c7a862a41d0df174fc64838762a1",
+                "reference": "1da0f10cfdc7c7a862a41d0df174fc64838762a1",
                 "shasum": ""
             },
             "require": {
@@ -507,22 +507,22 @@
             "description": "A template bundle for the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.6"
+                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.7"
             },
-            "time": "2024-09-11T08:33:37+00:00"
+            "time": "2024-10-02T13:13:51+00:00"
         },
         {
             "name": "directorytree/ldaprecord",
-            "version": "v3.7.0",
+            "version": "v3.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DirectoryTree/LdapRecord.git",
-                "reference": "4113aa08f72bbc76630fad3b05d57cd431fb0839"
+                "reference": "9b5f53d820a490fdb0c7a098c93f3b83b74455dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DirectoryTree/LdapRecord/zipball/4113aa08f72bbc76630fad3b05d57cd431fb0839",
-                "reference": "4113aa08f72bbc76630fad3b05d57cd431fb0839",
+                "url": "https://api.github.com/repos/DirectoryTree/LdapRecord/zipball/9b5f53d820a490fdb0c7a098c93f3b83b74455dd",
+                "reference": "9b5f53d820a490fdb0c7a098c93f3b83b74455dd",
                 "shasum": ""
             },
             "require": {
@@ -585,7 +585,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-07-26T21:20:12+00:00"
+            "time": "2024-09-23T03:45:43+00:00"
         },
         {
             "name": "doctrine/inflector",
@@ -5690,16 +5690,16 @@
         },
         {
             "name": "symfony/translation",
-            "version": "v6.4.10",
+            "version": "v6.4.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation.git",
-                "reference": "94041203f8ac200ae9e7c6a18fa6137814ccecc9"
+                "reference": "cf8360b8352b086be620fae8342c4d96e391a489"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation/zipball/94041203f8ac200ae9e7c6a18fa6137814ccecc9",
-                "reference": "94041203f8ac200ae9e7c6a18fa6137814ccecc9",
+                "url": "https://api.github.com/repos/symfony/translation/zipball/cf8360b8352b086be620fae8342c4d96e391a489",
+                "reference": "cf8360b8352b086be620fae8342c4d96e391a489",
                 "shasum": ""
             },
             "require": {
@@ -5765,7 +5765,7 @@
             "description": "Provides tools to internationalize your application",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/translation/tree/v6.4.10"
+                "source": "https://github.com/symfony/translation/tree/v6.4.12"
             },
             "funding": [
                 {
@@ -5781,7 +5781,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-26T12:30:32+00:00"
+            "time": "2024-09-16T06:02:54+00:00"
         },
         {
             "name": "symfony/translation-contracts",
@@ -10358,14 +10358,14 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.1",
         "ext-json": "*"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "platform-overrides": {
         "php": "8.1"
     },
