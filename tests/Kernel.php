@@ -10,6 +10,7 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\DbpRelayBasePersonConnectorLdapBundl
 use Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection\Configuration;
 use Dbp\Relay\CoreBundle\DbpRelayCoreBundle;
 use Dbp\Relay\CoreConnectorLdapBundle\DbpRelayCoreConnectorLdapBundle;
+use Dbp\Relay\CoreConnectorLdapBundle\Ldap\LdapConnectionProvider;
 use Dbp\Relay\CoreConnectorLdapBundle\TestUtils\TestLdapConnectionProvider;
 use Nelmio\CorsBundle\NelmioCorsBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -47,6 +48,10 @@ class Kernel extends BaseKernel
 
     protected function configureContainer(ContainerConfigurator $container, LoaderInterface $loader)
     {
+        // for backward compatibility with symfony 5: this is required to be able to replace the service
+        // with the TestLdapConnectionProvider
+        $container->services()->set(LdapConnectionProvider::class)->public();
+
         $container->import('@DbpRelayCoreBundle/Resources/config/services_test.yaml');
         $container->extension('framework', [
             'test' => true,
