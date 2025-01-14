@@ -8,7 +8,7 @@
         "api-platform/core": "^3.2",
         "dbp/relay-base-person-bundle": "^0.2.33",
         "dbp/relay-core-bundle": "^0.1.186",
-        "dbp/relay-core-connector-ldap-bundle": "^0.2.5",
+        "dbp/relay-core-connector-ldap-bundle": "^0.2.9",
         "psr/container": "^1.1 || ^2",
         "psr/log": "^1.1.4 || ^2.0 || ^3.0",
         "symfony/cache": "^5.4 || ^6.4",

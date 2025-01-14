@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
+use Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection\Configuration;
 use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
@@ -12,8 +13,7 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils\TestPersonEventSubsc
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Rest\Options;
 use Dbp\Relay\CoreBundle\TestUtils\TestUserSession;
-use Dbp\Relay\CoreConnectorLdapBundle\Ldap\LdapConnectionProvider;
-use Dbp\Relay\CoreConnectorLdapBundle\Ldap\TestLdapConnection;
+use Dbp\Relay\CoreConnectorLdapBundle\TestUtils\TestLdapConnectionProvider;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class PersonTest extends ApiTestCase
@@ -23,7 +23,7 @@ class PersonTest extends ApiTestCase
 
     private ?LDAPApi $ldapApi = null;
     private ?LDAPPersonProvider $personProvider = null;
-    private ?TestLdapConnection $testLdapConnection = null;
+    private ?TestLdapConnectionProvider $testLdapConnectionProvider = null;
 
     protected function setUp(): void
     {
@@ -37,20 +37,16 @@ class PersonTest extends ApiTestCase
         $eventDispatcher->addSubscriber($customPersonEventSubscriber);
         $eventDispatcher->addSubscriber($localDataEventSubscriber);
 
-        $LDAP_CONNECTION_IDENTIFIER = 'test_connection';
-        $ldapConnectionProvider = new LdapConnectionProvider();
-        $this->testLdapConnection = $ldapConnectionProvider->addTestConnection($LDAP_CONNECTION_IDENTIFIER);
+        $this->testLdapConnectionProvider = TestLdapConnectionProvider::create();
 
-        $this->ldapApi = new LDAPApi(new TestUserSession(), $eventDispatcher, $ldapConnectionProvider);
+        $this->ldapApi = new LDAPApi(new TestUserSession(), $eventDispatcher, $this->testLdapConnectionProvider);
         $this->ldapApi->setConfig([
-            'ldap' => [
-                'connection' => $LDAP_CONNECTION_IDENTIFIER,
-                'attributes' => [
-                    'identifier' => 'id',
-                    'given_name' => 'given_name',
-                    'family_name' => 'family_name',
-                    'email' => 'email',
-                    'birthday' => 'dateofbirth',
+            Configuration::LDAP_ATTRIBUTE => [
+                Configuration::LDAP_CONNECTION_ATTRIBUTE => TestLdapConnectionProvider::DEFAULT_CONNECTION_IDENTIFIER,
+                Configuration::LDAP_ATTRIBUTES_ATTRIBUTE => [
+                    Configuration::LDAP_IDENTIFIER_ATTRIBUTE_ATTRIBUTE => 'cn',
+                    Configuration::LDAP_GIVEN_NAME_ATTRIBUTE_ATTRIBUTE => 'givenName',
+                    Configuration::LDAP_FAMILY_NAME_ATTRIBUTE_ATTRIBUTE => 'sn',
                 ],
             ],
         ]);
@@ -61,6 +57,7 @@ class PersonTest extends ApiTestCase
     public function testGetPersonNotFound()
     {
         try {
+            $this->testLdapConnectionProvider->mockResults([]);
             $this->personProvider->getPerson('____nope____');
             $this->fail('exception not thrown as expected');
         } catch (ApiError $apiError) {
@@ -70,11 +67,13 @@ class PersonTest extends ApiTestCase
 
     public function testGetPerson()
     {
-        $this->testLdapConnection->setTestEntries([[
-            'id' => ['foobar'],
-            'given_name' => ['John'],
-            'family_name' => ['Doe'],
-        ]]);
+        $this->testLdapConnectionProvider->mockResults([
+            [
+                'cn' => ['foobar'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
+            ],
+        ]);
 
         $person = $this->personProvider->getPerson('foobar');
         $this->assertEquals('John', $person->getGivenName());
@@ -85,12 +84,12 @@ class PersonTest extends ApiTestCase
     {
         $EMAIL = 'john@doe.com';
         $BIRTHDATE = '1994-06-24 00:00:00';
-        $this->testLdapConnection->setTestEntries([[
-            'id' => ['foobar'],
+        $this->testLdapConnectionProvider->mockResults([[
+            'cn' => ['foobar'],
             'email' => [$EMAIL],
             'dateofbirth' => [$BIRTHDATE],
-            'given_name' => ['John'],
-            'family_name' => ['Doe'],
+            'givenName' => ['John'],
+            'sn' => ['Doe'],
         ]]);
 
         $options = [];
@@ -104,11 +103,13 @@ class PersonTest extends ApiTestCase
 
     public function testCustomPostEventSubscriber()
     {
-        $this->testLdapConnection->setTestEntries([[
-            'id' => ['foobar'],
-            'given_name' => ['John'],
-            'family_name' => ['Doe'],
-        ]]);
+        $this->testLdapConnectionProvider->mockResults([
+            [
+                'cn' => ['foobar'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
+            ],
+        ]);
 
         $person = $this->personProvider->getPerson('foobar');
 
@@ -117,21 +118,21 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonCollection()
     {
-        $this->testLdapConnection->setTestEntries([
+        $this->testLdapConnectionProvider->mockResults([
             [
-                'id' => ['foo'],
-                'given_name' => ['John'],
-                'family_name' => ['Doe'],
+                'cn' => ['foo'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
             ],
             [
-                'id' => ['bar'],
-                'given_name' => ['Joni'],
-                'family_name' => ['Mitchell'],
+                'cn' => ['bar'],
+                'givenName' => ['Joni'],
+                'sn' => ['Mitchell'],
             ],
             [
-                'id' => ['baz'],
-                'given_name' => ['Toni'],
-                'family_name' => ['Lu'],
+                'cn' => ['baz'],
+                'givenName' => ['Toni'],
+                'sn' => ['Lu'],
             ],
         ]);
 
@@ -153,21 +154,21 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonCollectionPaginated()
     {
-        $this->testLdapConnection->setTestEntries([
+        $this->testLdapConnectionProvider->mockResults([
             [
-                'id' => ['foo'],
-                'given_name' => ['John'],
-                'family_name' => ['Doe'],
+                'cn' => ['foo'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
             ],
             [
-                'id' => ['bar'],
-                'given_name' => ['Joni'],
-                'family_name' => ['Mitchell'],
+                'cn' => ['bar'],
+                'givenName' => ['Joni'],
+                'sn' => ['Mitchell'],
             ],
             [
-                'id' => ['baz'],
-                'given_name' => ['Toni'],
-                'family_name' => ['Lu'],
+                'cn' => ['baz'],
+                'givenName' => ['Toni'],
+                'sn' => ['Lu'],
             ],
         ]);
 
@@ -181,24 +182,24 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonCollectionWithLocalData()
     {
-        $this->testLdapConnection->setTestEntries([
+        $this->testLdapConnectionProvider->mockResults([
             [
-                'id' => ['foo'],
-                'given_name' => ['John'],
-                'family_name' => ['Doe'],
+                'cn' => ['foo'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
                 'email' => ['john@doe.com'],
                 'dateofbirth' => ['1994-06-24 00:00:00'],
             ],
             [
-                'id' => ['bar'],
-                'given_name' => ['Joni'],
-                'family_name' => ['Mitchell'],
+                'cn' => ['bar'],
+                'givenName' => ['Joni'],
+                'sn' => ['Mitchell'],
                 'email' => ['joni@mitchell.com'],
             ],
             [
-                'id' => ['baz'],
-                'given_name' => ['Toni'],
-                'family_name' => ['Lu'],
+                'cn' => ['baz'],
+                'givenName' => ['Toni'],
+                'sn' => ['Lu'],
                 'dateofbirth' => [],
             ],
         ]);

@@ -1,5 +1,9 @@
 # Unreleased
 
+# v0.5.8
+
+* Test with mock LDAP
+
 # v0.5.7
 
 * Add check if user is authenticated before requesting user identifier, to prevent internal exception on
