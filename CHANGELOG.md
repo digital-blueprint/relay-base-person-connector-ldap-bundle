@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.5.9
+
 * Apply filters for the get item request in the same way as the collection request (for them to be in line
 with each other). This is relevant especially force-used filters (see dbp/relay-core-bundle release v0.1.207)
 * Also trigger a `PersonPreEvent` for the get item request
