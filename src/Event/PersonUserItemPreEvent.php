@@ -8,12 +8,8 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class PersonUserItemPreEvent extends Event
 {
-    /** @var string */
-    private $identifier;
-
-    public function __construct(string $identifier)
+    public function __construct(private string $identifier)
     {
-        $this->identifier = $identifier;
     }
 
     public function getIdentifier(): string

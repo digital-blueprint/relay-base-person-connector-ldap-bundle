@@ -147,16 +147,7 @@ class LDAPApi implements LoggerAwareInterface
             }
             Options::setSort($ldapOptions, new Sort($targetSortFields));
 
-            $persons = [];
-            foreach ($this->getPersonEntries($currentPageNumber, $maxNumItemsPerPage, $ldapOptions) as $userItem) {
-                $person = $this->personFromLdapEntry($userItem);
-                if ($person === null) {
-                    continue;
-                }
-                $persons[] = $person;
-            }
-
-            return $persons;
+            return $this->getPersonCollection($currentPageNumber, $maxNumItemsPerPage, $ldapOptions);
         } catch (FilterException $filterException) {
             throw new \RuntimeException($filterException->getMessage());
         }
@@ -178,10 +169,19 @@ class LDAPApi implements LoggerAwareInterface
      *
      * @throws ApiError
      */
-    private function getPersonEntries(int $currentPageNumber, int $maxNumItemsPerPage, array $options): array
+    private function getPersonCollection(int $currentPageNumber, int $maxNumItemsPerPage, array $options): array
     {
         try {
-            return $this->getLdapConnection()->getEntries($currentPageNumber, $maxNumItemsPerPage, $options);
+            $persons = [];
+            foreach ($this->getLdapConnection()->getEntries($currentPageNumber, $maxNumItemsPerPage, $options) as $userItem) {
+                $person = $this->personFromLdapEntry($userItem);
+                if ($person === null) { // person without identifier
+                    continue;
+                }
+                $persons[] = $person;
+            }
+
+            return $persons;
         } catch (LdapException $ldapException) {
             // There was an issue binding / connecting to the server.
             throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY,
@@ -192,23 +192,45 @@ class LDAPApi implements LoggerAwareInterface
     /*
      * @throws ApiError
      */
-    private function getPersonEntry(string $identifier): LdapEntryInterface
+    private function getPersonItem(string $identifier, array $options): ?Person
     {
-        $preEvent = new PersonUserItemPreEvent($identifier);
-        $this->eventDispatcher->dispatch($preEvent);
-        $identifier = $preEvent->getIdentifier();
+        $personUserItemPreEvent = new PersonUserItemPreEvent($identifier);
+        $this->eventDispatcher->dispatch($personUserItemPreEvent);
+        $identifier = $personUserItemPreEvent->getIdentifier();
+
+        $personPreEvent = new PersonPreEvent($options);
+        $this->eventDispatcher->dispatch($personPreEvent);
+        $options = $personPreEvent->getOptions();
 
         try {
-            return $this->getLdapConnection()->getEntryByAttribute($this->attributeMapper->getTargetAttributePath(self::IDENTIFIER_ATTRIBUTE_KEY), $identifier);
-        } catch (LdapException $ldapException) {
-            if ($ldapException->getCode() === LdapException::ENTRY_NOT_FOUND) {
-                throw ApiError::withDetails(Response::HTTP_NOT_FOUND,
-                    sprintf("Person with id '%s' could not be found!", $identifier));
+            $filter = FilterTreeBuilder::create()
+                ->equals('identifier', $identifier)
+                ->createFilter();
+            if ($filterFromOptions = Options::getFilter($options)) {
+                $filter->combineWith($filterFromOptions);
             }
+            self::replaceAttributeNamesByLdapAttributeNames($filter->getRootNode(), $this->attributeMapper);
+        } catch (FilterException $filterException) {
+            throw new \RuntimeException('failed to create filter: '.$filterException->getMessage());
+        }
+
+        $ldapOptions = [];
+        Options::setFilter($ldapOptions, $filter);
+
+        try {
+            $entries = $this->getLdapConnection()->getEntries(1, 1, $ldapOptions);
+        } catch (LdapException $ldapException) {
             throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY,
                 sprintf("Person with id '%s' could not be loaded! Message: %s", $identifier,
                     CoreTools::filterErrorMessage($ldapException->getMessage())));
         }
+
+        if (empty($entries)) {
+            throw ApiError::withDetails(Response::HTTP_NOT_FOUND,
+                sprintf("Person with id '%s' could not be found!", $identifier));
+        }
+
+        return $this->personFromLdapEntry($entries[0]);
     }
 
     /**
@@ -220,14 +242,11 @@ class LDAPApi implements LoggerAwareInterface
 
         // fast path if requested person is the currently logged-in user
         if ($this->userSession->isAuthenticated() && $this->userSession->getUserIdentifier() === $identifier) {
-            $person = $this->getCurrentPersonCached(true);
-            assert($person !== null);
+            $person = $this->getCurrentPersonCached(true, $options);
         } else {
-            $personEntry = $this->getPersonEntry($identifier);
-            $person = $this->personFromLdapEntry($personEntry);
-            // this should never happen (since we have searched by identifier):
-            if ($person === null) {
-                throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'identifier missing in LDAP entry');
+            if (($person = $this->getPersonItem($identifier, $options)) === null) {
+                // this should never happen (since we have searched by identifier)
+                throw new \UnexpectedValueException('identifier missing in LDAP entry');
             }
         }
 
@@ -241,7 +260,8 @@ class LDAPApi implements LoggerAwareInterface
     {
         $this->eventDispatcher->onNewOperation($options);
 
-        return $this->getCurrentPersonCached(count(Options::getLocalDataAttributes($options)) > 0);
+        return $this->getCurrentPersonCached(
+            count(Options::getLocalDataAttributes($options)) > 0, $options);
     }
 
     /**
@@ -276,9 +296,9 @@ class LDAPApi implements LoggerAwareInterface
     /**
      * @thorws ApiError
      */
-    private function getCurrentPersonCached(bool $checkLocalDataAttributes): ?Person
+    private function getCurrentPersonCached(bool $checkLocalDataAttributes, array $options): ?Person
     {
-        if (!$this->userSession->isAuthenticated()
+        if (false === $this->userSession->isAuthenticated()
             || $this->userSession->isServiceAccount()
             || ($currentIdentifier = $this->userSession->getUserIdentifier()) === null) {
             return null;
@@ -308,15 +328,13 @@ class LDAPApi implements LoggerAwareInterface
 
         if ($person === null) {
             try {
-                $ldapEntry = $this->getPersonEntry($currentIdentifier);
-                $person = $this->personFromLdapEntry($ldapEntry);
                 // this should never happen (since we have searched by identifier):
-                if ($person === null) {
-                    throw ApiError::withDetails(Response::HTTP_INTERNAL_SERVER_ERROR, 'identifier missing in LDAP entry');
+                if (($person = $this->getPersonItem($currentIdentifier, $options)) === null) {
+                    throw new \UnexpectedValueException('identifier missing in LDAP entry');
                 }
-            } catch (ApiError $exc) {
-                if ($exc->getStatusCode() !== Response::HTTP_NOT_FOUND) {
-                    throw $exc;
+            } catch (ApiError $apiError) {
+                if ($apiError->getStatusCode() !== Response::HTTP_NOT_FOUND) {
+                    throw $apiError;
                 }
             }
             $item->set($person);

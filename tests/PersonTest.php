@@ -12,6 +12,8 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils\TestPersonEventSubscriber;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Rest\Options;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterException;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterTreeBuilder;
 use Dbp\Relay\CoreBundle\TestUtils\TestUserSession;
 use Dbp\Relay\CoreConnectorLdapBundle\TestUtils\TestLdapConnectionProvider;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -24,17 +26,18 @@ class PersonTest extends ApiTestCase
     private ?LDAPApi $ldapApi = null;
     private ?LDAPPersonProvider $personProvider = null;
     private ?TestLdapConnectionProvider $testLdapConnectionProvider = null;
+    private ?TestPersonEventSubscriber $testPersonEventSubscriber = null;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $customPersonEventSubscriber = new TestPersonEventSubscriber();
+        $this->testPersonEventSubscriber = new TestPersonEventSubscriber();
         $localDataEventSubscriber = new PersonEventSubscriber();
         $localDataEventSubscriber->setConfig(self::createLocalDataMappingConfig());
 
         $eventDispatcher = new EventDispatcher();
-        $eventDispatcher->addSubscriber($customPersonEventSubscriber);
+        $eventDispatcher->addSubscriber($this->testPersonEventSubscriber);
         $eventDispatcher->addSubscriber($localDataEventSubscriber);
 
         $this->testLdapConnectionProvider = TestLdapConnectionProvider::create();
@@ -78,6 +81,36 @@ class PersonTest extends ApiTestCase
         $person = $this->personProvider->getPerson('foobar');
         $this->assertEquals('John', $person->getGivenName());
         $this->assertEquals('Doe', $person->getFamilyName());
+    }
+
+    /**
+     * @throws FilterException
+     */
+    public function testGetPersonWithFilter()
+    {
+        $this->testLdapConnectionProvider->mockResults([
+            [
+                'cn' => ['foobar'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
+            ],
+        ]);
+
+        $filter = FilterTreeBuilder::create()
+            ->iStartsWith('familyName', 'D')
+            ->createFilter();
+        $options = [];
+        Options::setFilter($options, $filter);
+        $person = $this->personProvider->getPerson('foobar', $options);
+        $this->assertEquals('John', $person->getGivenName());
+        $this->assertEquals('Doe', $person->getFamilyName());
+
+        $ldapFilter = FilterTreeBuilder::create()
+            ->iStartsWith('sn', 'D')
+            ->createFilter();
+
+        $this->assertEquals($ldapFilter->toArray(),
+            Options::getFilter($this->testPersonEventSubscriber->getOptions())->toArray());
     }
 
     public function testLocalDataAttributes()
@@ -150,6 +183,33 @@ class PersonTest extends ApiTestCase
         $this->assertEquals('bar', $persons[2]->getIdentifier());
         $this->assertEquals('Joni', $persons[2]->getGivenName());
         $this->assertEquals('Mitchell', $persons[2]->getFamilyName());
+    }
+
+    /**
+     * @throws FilterException
+     */
+    public function testGetPersonCollectionWithFilter(): void
+    {
+        $this->testLdapConnectionProvider->mockResults([
+            [
+                'cn' => ['bar'],
+                'givenName' => ['Joni'],
+                'sn' => ['Mitchell'],
+            ],
+        ]);
+
+        $filter = FilterTreeBuilder::create()
+            ->iStartsWith('familyName', 'm')
+            ->createFilter();
+        $options = [];
+        Options::setFilter($options, $filter);
+        $this->personProvider->getPersons(1, 3, $options);
+
+        $ldapFilter = FilterTreeBuilder::create()
+            ->iStartsWith('sn', 'm')
+            ->createFilter();
+        $this->assertEquals($ldapFilter->toArray(),
+            Options::getFilter($this->testPersonEventSubscriber->getOptions())->toArray());
     }
 
     public function testGetPersonCollectionPaginated()
