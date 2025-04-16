@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.5.10
+
+* Add support for api-platform 4.1
+* Drop support for Symfony 5
+* Drop support for PHP 8.1
+
 ## v0.5.9
 
 * Apply filters for the get item request in the same way as the collection request (for them to be in line
