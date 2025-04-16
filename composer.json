@@ -5,7 +5,6 @@
     "require": {
         "php": ">=8.1",
         "ext-json": "*",
-        "api-platform/core": "^3.2",
         "dbp/relay-base-person-bundle": "^0.2.33",
         "dbp/relay-core-bundle": "^0.1.186",
         "dbp/relay-core-connector-ldap-bundle": "^0.2.9",
@@ -20,6 +19,7 @@
         "symfony/http-kernel": "^5.4 || ^6.4"
     },
     "require-dev": {
+        "api-platform/core": "^3.4 || ^4.1",
         "friendsofphp/php-cs-fixer": "^3.50",
         "mockery/mockery": "^1.6.7",
         "phpstan/phpstan": "^2.0.0",
