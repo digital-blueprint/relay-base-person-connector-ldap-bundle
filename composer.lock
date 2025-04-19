@@ -298,21 +298,21 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.37",
+            "version": "v0.2.38",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-base-person-bundle.git",
-                "reference": "8bae41cc9564db5a9e9e71e9a008ec3b74add1d9"
+                "reference": "3c030c20adfa6b694f66c3f17bd87c7dbd496f95"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/8bae41cc9564db5a9e9e71e9a008ec3b74add1d9",
-                "reference": "8bae41cc9564db5a9e9e71e9a008ec3b74add1d9",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/3c030c20adfa6b694f66c3f17bd87c7dbd496f95",
+                "reference": "3c030c20adfa6b694f66c3f17bd87c7dbd496f95",
                 "shasum": ""
             },
             "require": {
                 "api-platform/core": "^3.4 || ^4.1",
-                "dbp/relay-core-bundle": "^0.1.190",
+                "dbp/relay-core-bundle": "^0.1.210",
                 "ext-json": "*",
                 "php": ">=8.2",
                 "symfony/config": "^6.4",
@@ -348,9 +348,9 @@
             ],
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-base-person-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.37"
+                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.38"
             },
-            "time": "2025-04-15T08:47:21+00:00"
+            "time": "2025-04-16T13:06:01+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
@@ -458,20 +458,19 @@
         },
         {
             "name": "dbp/relay-core-connector-ldap-bundle",
-            "version": "v0.2.11",
+            "version": "v0.2.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle.git",
-                "reference": "e73a86742182981ece2569a1de58fb8ef8e25746"
+                "reference": "a1fb170d81e3509f5ac342912c32f51507828682"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/e73a86742182981ece2569a1de58fb8ef8e25746",
-                "reference": "e73a86742182981ece2569a1de58fb8ef8e25746",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/a1fb170d81e3509f5ac342912c32f51507828682",
+                "reference": "a1fb170d81e3509f5ac342912c32f51507828682",
                 "shasum": ""
             },
             "require": {
-                "api-platform/core": "^3.4",
                 "dbp/relay-core-bundle": "^0.1.198",
                 "directorytree/ldaprecord": "^3.7.6",
                 "ext-json": "*",
@@ -491,6 +490,7 @@
                 "nesbot/carbon": "<3.8"
             },
             "require-dev": {
+                "captainhook/captainhook": "^5.25",
                 "friendsofphp/php-cs-fixer": "^3.50",
                 "phpstan/phpstan": "^2.0.0",
                 "phpstan/phpstan-phpunit": "^2.0.0",
@@ -514,9 +514,9 @@
             "description": "A template bundle for the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.11"
+                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.12"
             },
-            "time": "2025-04-01T09:09:46+00:00"
+            "time": "2025-04-16T12:15:01+00:00"
         },
         {
             "name": "directorytree/ldaprecord",
