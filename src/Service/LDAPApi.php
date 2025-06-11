@@ -128,17 +128,8 @@ class LDAPApi implements LoggerAwareInterface
                 Options::setFilter($ldapOptions, $filter);
             }
 
-            $sortFields = Options::getSort($options)?->getSortFields();
-            if (empty($sortFields)) {
-                // TODO: sorting should be requested by the client, or at least by
-                // the base person bundle instead of here (mapping of attribute names required!):
-                $sortFields = [
-                    Sort::createSortField(self::FAMILY_NAME_ATTRIBUTE_KEY, Sort::ASCENDING_DIRECTION),
-                ];
-            }
-
             $targetSortFields = [];
-            foreach ($sortFields as $sortField) {
+            foreach (Options::getSort($options)?->getSortFields() ?? [] as $sortField) {
                 $targetSortAttributePath = $this->attributeMapper->getTargetAttributePath(Sort::getPath($sortField));
                 if ($targetSortAttributePath === null) {
                     throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'undefined person attribute to sort by: '.Sort::getPath($sortField));

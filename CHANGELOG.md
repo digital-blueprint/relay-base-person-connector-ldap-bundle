@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Remove default sorting by family name
+
 ## v0.5.10
 
 * Add support for api-platform 4.1

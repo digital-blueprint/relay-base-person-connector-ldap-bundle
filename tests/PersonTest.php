@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
+use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection\Configuration;
 use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
@@ -172,17 +173,21 @@ class PersonTest extends ApiTestCase
         $persons = $this->personProvider->getPersons(1, 3);
         $this->assertCount(3, $persons);
         // NOTE: results must be sorted by family name
-        $this->assertEquals('foo', $persons[0]->getIdentifier());
-        $this->assertEquals('John', $persons[0]->getGivenName());
-        $this->assertEquals('Doe', $persons[0]->getFamilyName());
-
-        $this->assertEquals('baz', $persons[1]->getIdentifier());
-        $this->assertEquals('Toni', $persons[1]->getGivenName());
-        $this->assertEquals('Lu', $persons[1]->getFamilyName());
-
-        $this->assertEquals('bar', $persons[2]->getIdentifier());
-        $this->assertEquals('Joni', $persons[2]->getGivenName());
-        $this->assertEquals('Mitchell', $persons[2]->getFamilyName());
+        $this->assertCount(1, self::selectWhere($persons, function ($person) {
+            return $person->getIdentifier() === 'foo'
+                && $person->getFamilyName() === 'Doe'
+                && $person->getGivenName() === 'John';
+        }));
+        $this->assertCount(1, self::selectWhere($persons, function ($person) {
+            return $person->getIdentifier() === 'bar'
+                && $person->getFamilyName() === 'Mitchell'
+                && $person->getGivenName() === 'Joni';
+        }));
+        $this->assertCount(1, self::selectWhere($persons, function ($person) {
+            return $person->getIdentifier() === 'baz'
+                && $person->getFamilyName() === 'Lu'
+                && $person->getGivenName() === 'Toni';
+        }));
     }
 
     /**
@@ -210,34 +215,6 @@ class PersonTest extends ApiTestCase
             ->createFilter();
         $this->assertEquals($ldapFilter->toArray(),
             Options::getFilter($this->testPersonEventSubscriber->getOptions())->toArray());
-    }
-
-    public function testGetPersonCollectionPaginated()
-    {
-        $this->testLdapConnectionProvider->mockResults([
-            [
-                'cn' => ['foo'],
-                'givenName' => ['John'],
-                'sn' => ['Doe'],
-            ],
-            [
-                'cn' => ['bar'],
-                'givenName' => ['Joni'],
-                'sn' => ['Mitchell'],
-            ],
-            [
-                'cn' => ['baz'],
-                'givenName' => ['Toni'],
-                'sn' => ['Lu'],
-            ],
-        ]);
-
-        $persons = $this->personProvider->getPersons(2, 2);
-        $this->assertCount(1, $persons);
-        // NOTE: results must be sorted by family name
-        $this->assertEquals('bar', $persons[0]->getIdentifier());
-        $this->assertEquals('Joni', $persons[0]->getGivenName());
-        $this->assertEquals('Mitchell', $persons[0]->getFamilyName());
     }
 
     public function testGetPersonCollectionWithLocalData()
@@ -269,24 +246,27 @@ class PersonTest extends ApiTestCase
             Options::requestLocalDataAttributes($options, [self::BIRTHDATE_ATTRIBUTE_NAME, self::EMAIL_ATTRIBUTE_NAME]));
         $this->assertCount(3, $persons);
 
-        // NOTE: results must be sorted by family name
-        $this->assertEquals('foo', $persons[0]->getIdentifier());
-        $this->assertEquals('John', $persons[0]->getGivenName());
-        $this->assertEquals('Doe', $persons[0]->getFamilyName());
-        $this->assertEquals('1994-06-24 00:00:00', $persons[0]->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
-        $this->assertEquals('john@doe.com', $persons[0]->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
-
-        $this->assertEquals('baz', $persons[1]->getIdentifier());
-        $this->assertEquals('Toni', $persons[1]->getGivenName());
-        $this->assertEquals('Lu', $persons[1]->getFamilyName());
-        $this->assertEquals(null, $persons[1]->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
-        $this->assertEquals(null, $persons[1]->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
-
-        $this->assertEquals('bar', $persons[2]->getIdentifier());
-        $this->assertEquals('Joni', $persons[2]->getGivenName());
-        $this->assertEquals('Mitchell', $persons[2]->getFamilyName());
-        $this->assertEquals(null, $persons[2]->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME));
-        $this->assertEquals('joni@mitchell.com', $persons[2]->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
+        $this->assertCount(1, self::selectWhere($persons, function (Person $person) {
+            return $person->getIdentifier() === 'foo'
+                && $person->getFamilyName() === 'Doe'
+                && $person->getGivenName() === 'John'
+                && $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME) === '1994-06-24 00:00:00'
+                && $person->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME) === 'john@doe.com';
+        }));
+        $this->assertCount(1, self::selectWhere($persons, function (Person $person) {
+            return $person->getIdentifier() === 'baz'
+                && $person->getFamilyName() === 'Lu'
+                && $person->getGivenName() === 'Toni'
+                && $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME) === null
+                && $person->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME) === null;
+        }));
+        $this->assertCount(1, self::selectWhere($persons, function (Person $person) {
+            return $person->getIdentifier() === 'bar'
+                && $person->getFamilyName() === 'Mitchell'
+                && $person->getGivenName() === 'Joni'
+                && $person->getLocalDataValue(self::BIRTHDATE_ATTRIBUTE_NAME) === null
+                && $person->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME) === 'joni@mitchell.com';
+        }));
     }
 
     private static function createLocalDataMappingConfig(): array
@@ -306,5 +286,10 @@ class PersonTest extends ApiTestCase
         ];
 
         return $config;
+    }
+
+    private static function selectWhere(array $results, callable $where): array
+    {
+        return array_values(array_filter($results, $where));
     }
 }
