@@ -11,7 +11,6 @@ use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonUserItemPreEvent;
 use Dbp\Relay\CoreBundle\API\UserSessionInterface;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
-use Dbp\Relay\CoreBundle\Helpers\Tools;
 use Dbp\Relay\CoreBundle\Helpers\Tools as CoreTools;
 use Dbp\Relay\CoreBundle\LocalData\LocalDataEventDispatcher;
 use Dbp\Relay\CoreBundle\Rest\Options;
@@ -110,12 +109,11 @@ class LDAPApi implements LoggerAwareInterface
                 $filter = Filter::create();
             }
 
-            $searchOption = $options[Person::SEARCH_PARAMETER_NAME] ?? null;
-            if (Tools::isNullOrEmpty($searchOption) === false) {
-                // full name MUST contain  ALL substrings of search term
+            if ($searchOption = $options[Person::SEARCH_PARAMETER_NAME] ?? null) {
+                // the full name MUST contain ALL search terms
                 $filterTreeBuilder = FilterTreeBuilder::create($filter->getRootNode());
-                $searchTerms = explode(' ', $searchOption);
-                foreach ($searchTerms as $searchTerm) {
+                foreach (explode(' ', $searchOption) as $searchTerm) {
+                    $searchTerm = trim($searchTerm);
                     $filterTreeBuilder
                         ->or()
                         ->iContains($this->attributeMapper->getTargetAttributePath(self::GIVEN_NAME_ATTRIBUTE_KEY), $searchTerm)
