@@ -174,6 +174,9 @@ class LDAPApi implements LoggerAwareInterface
 
             return $persons;
         } catch (LdapException $ldapException) {
+            if ($ldapException->getCode() === LdapException::TOO_MANY_RESULTS_TO_SORT) {
+                throw ApiError::withDetails(Response::HTTP_INSUFFICIENT_STORAGE, 'too many results to sort. please refine your search.');
+            }
             // There was an issue binding / connecting to the server.
             throw ApiError::withDetails(Response::HTTP_BAD_GATEWAY,
                 sprintf('People could not be loaded! Message: %s', CoreTools::filterErrorMessage($ldapException->getMessage())));

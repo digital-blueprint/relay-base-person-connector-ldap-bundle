@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "989e40e3262f922da9a2c7ead8841892",
+    "content-hash": "18ef1d661e4d999edf13b3cb94f1526b",
     "packages": [
         {
             "name": "api-platform/core",
@@ -459,16 +459,16 @@
         },
         {
             "name": "dbp/relay-core-connector-ldap-bundle",
-            "version": "v0.2.12",
+            "version": "v0.2.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle.git",
-                "reference": "a1fb170d81e3509f5ac342912c32f51507828682"
+                "reference": "ee0e1a649e3953da29915ce5a1e964e56ba96f3a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/a1fb170d81e3509f5ac342912c32f51507828682",
-                "reference": "a1fb170d81e3509f5ac342912c32f51507828682",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/ee0e1a649e3953da29915ce5a1e964e56ba96f3a",
+                "reference": "ee0e1a649e3953da29915ce5a1e964e56ba96f3a",
                 "shasum": ""
             },
             "require": {
@@ -515,9 +515,9 @@
             "description": "A template bundle for the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.12"
+                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.13"
             },
-            "time": "2025-04-16T12:15:01+00:00"
+            "time": "2025-06-11T13:44:39+00:00"
         },
         {
             "name": "directorytree/ldaprecord",

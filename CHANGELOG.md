@@ -3,6 +3,8 @@
 ## Unreleased
 
 * Remove default sorting by family name
+* Throw an error (507 insufficient storage) if sorting is requested and the number of results exceeds the limit
+for the connection defined the ldap connector config
 
 ## v0.5.10
 

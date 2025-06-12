@@ -15,9 +15,11 @@ use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Rest\Options;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterException;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterTreeBuilder;
+use Dbp\Relay\CoreBundle\Rest\Query\Sort\Sort;
 use Dbp\Relay\CoreBundle\TestUtils\TestUserSession;
 use Dbp\Relay\CoreConnectorLdapBundle\TestUtils\TestLdapConnectionProvider;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\HttpFoundation\Response;
 
 class PersonTest extends ApiTestCase
 {
@@ -188,6 +190,160 @@ class PersonTest extends ApiTestCase
                 && $person->getFamilyName() === 'Lu'
                 && $person->getGivenName() === 'Toni';
         }));
+    }
+
+    public function testGetPersonCollectionWithSort()
+    {
+        $this->testLdapConnectionProvider->mockResults([
+            [
+                'cn' => ['foo'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
+            ],
+            [
+                'cn' => ['bar'],
+                'givenName' => ['Joni'],
+                'sn' => ['Mitchell'],
+            ],
+            [
+                'cn' => ['baz'],
+                'givenName' => ['Toni'],
+                'sn' => ['Lu'],
+            ],
+        ]);
+
+        $sort = new Sort([Sort::createSortField('familyName')]);
+        $options = [];
+        Options::setSort($options, $sort);
+        $persons = $this->personProvider->getPersons(1, 3, $options);
+        $this->assertCount(3, $persons);
+        // NOTE: results must be sorted by family name
+        $this->assertEquals('foo', $persons[0]->getIdentifier());
+        $this->assertEquals('John', $persons[0]->getGivenName());
+        $this->assertEquals('Doe', $persons[0]->getFamilyName());
+
+        $this->assertEquals('baz', $persons[1]->getIdentifier());
+        $this->assertEquals('Toni', $persons[1]->getGivenName());
+        $this->assertEquals('Lu', $persons[1]->getFamilyName());
+
+        $this->assertEquals('bar', $persons[2]->getIdentifier());
+        $this->assertEquals('Joni', $persons[2]->getGivenName());
+        $this->assertEquals('Mitchell', $persons[2]->getFamilyName());
+    }
+
+    public function testGetPersonCollectionWithTwoSortFields()
+    {
+        $this->testLdapConnectionProvider->mockResults([
+            [
+                'cn' => ['foo'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
+            ],
+            [
+                'cn' => ['bar'],
+                'givenName' => ['Joni'],
+                'sn' => ['Mitchell'],
+            ],
+            [
+                'cn' => ['baz'],
+                'givenName' => ['Jane'],
+                'sn' => ['Doe'],
+            ],
+        ]);
+
+        $sort = new Sort([Sort::createSortField('familyName'), Sort::createSortField('givenName')]);
+        $options = [];
+        Options::setSort($options, $sort);
+        $persons = $this->personProvider->getPersons(1, 3, $options);
+        $this->assertCount(3, $persons);
+
+        $this->assertEquals('baz', $persons[0]->getIdentifier());
+        $this->assertEquals('Jane', $persons[0]->getGivenName());
+        $this->assertEquals('Doe', $persons[0]->getFamilyName());
+
+        $this->assertEquals('foo', $persons[1]->getIdentifier());
+        $this->assertEquals('John', $persons[1]->getGivenName());
+        $this->assertEquals('Doe', $persons[1]->getFamilyName());
+
+        $this->assertEquals('bar', $persons[2]->getIdentifier());
+        $this->assertEquals('Joni', $persons[2]->getGivenName());
+        $this->assertEquals('Mitchell', $persons[2]->getFamilyName());
+    }
+
+    public function testGetPersonCollectionWithSortDescending()
+    {
+        $this->testLdapConnectionProvider->mockResults([
+            [
+                'cn' => ['foo'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
+            ],
+            [
+                'cn' => ['bar'],
+                'givenName' => ['Joni'],
+                'sn' => ['Mitchell'],
+            ],
+            [
+                'cn' => ['baz'],
+                'givenName' => ['Toni'],
+                'sn' => ['Lu'],
+            ],
+        ]);
+
+        $sort = new Sort([Sort::createSortField('familyName', Sort::DESCENDING_DIRECTION)]);
+        $options = [];
+        Options::setSort($options, $sort);
+        $persons = $this->personProvider->getPersons(1, 3, $options);
+        $this->assertCount(3, $persons);
+        // NOTE: results must be sorted by family name
+        $this->assertEquals('bar', $persons[0]->getIdentifier());
+        $this->assertEquals('Joni', $persons[0]->getGivenName());
+        $this->assertEquals('Mitchell', $persons[0]->getFamilyName());
+
+        $this->assertEquals('baz', $persons[1]->getIdentifier());
+        $this->assertEquals('Toni', $persons[1]->getGivenName());
+        $this->assertEquals('Lu', $persons[1]->getFamilyName());
+
+        $this->assertEquals('foo', $persons[2]->getIdentifier());
+        $this->assertEquals('John', $persons[2]->getGivenName());
+        $this->assertEquals('Doe', $persons[2]->getFamilyName());
+    }
+
+    public function testGetPersonCollectionWithSortTooManyResultsError()
+    {
+        $this->testLdapConnectionProvider->mockResults([
+            [
+                'cn' => ['foo'],
+                'givenName' => ['John'],
+                'sn' => ['Doe'],
+            ],
+            [
+                'cn' => ['bar'],
+                'givenName' => ['Joni'],
+                'sn' => ['Mitchell'],
+            ],
+            [
+                'cn' => ['baz'],
+                'givenName' => ['Toni'],
+                'sn' => ['Lu'],
+            ],
+            [
+                'cn' => ['bat'],
+                'givenName' => ['T'],
+                'sn' => ['Rex'],
+            ],
+        ]);
+
+        // Note: config of test ldap connection has a limit of 3 results that it will sort -> should refuse
+        $sort = new Sort([Sort::createSortField('familyName', Sort::DESCENDING_DIRECTION)]);
+        $options = [];
+        Options::setSort($options, $sort);
+        try {
+            $this->personProvider->getPersons(1, 3, $options);
+            $this->fail('exception not thrown as expected');
+        } catch (ApiError $apiError) {
+            $this->assertEquals(Response::HTTP_INSUFFICIENT_STORAGE, $apiError->getStatusCode());
+        }
     }
 
     /**
