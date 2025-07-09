@@ -350,11 +350,12 @@ class LDAPApi implements LoggerAwareInterface
     {
         foreach ($logicalNode->getChildren() as $childNode) {
             if ($childNode instanceof ConditionNode) {
-                $targetField = $attributeMapper->getTargetAttributePath($childNode->getField());
+                $targetField = $attributeMapper->getTargetAttributePath($childNode->getPath());
                 if ($targetField === null) {
-                    throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'undefined person attribute to filter by: '.$childNode->getField());
+                    throw ApiError::withDetails(Response::HTTP_BAD_REQUEST,
+                        'undefined person attribute to filter by: '.$childNode->getPath());
                 }
-                $childNode->setField($targetField);
+                $childNode->setPath($targetField);
             } elseif ($childNode instanceof LogicalNode) {
                 self::replaceAttributeNamesByLdapAttributeNames($childNode, $attributeMapper);
             }

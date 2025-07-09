@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update core and adapt
+
 ## v0.5.11
 
 - Remove default sorting by family name
