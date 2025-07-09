@@ -16,7 +16,6 @@ class ApiTest extends ApiTestCase
 
     protected function setUp(): void
     {
-        ApiTestCase::$alwaysBootKernel = true;
         $this->testClient = new TestClient(ApiTestCase::createClient());
         $this->testClient->setUpUser();
 

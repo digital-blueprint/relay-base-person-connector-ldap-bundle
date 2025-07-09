@@ -20,7 +20,7 @@
         "symfony/event-dispatcher-contracts": "^2.5 || ^3.4"
     },
     "require-dev": {
-        "api-platform/core": "^3.4 || ^4.1",
+        "api-platform/core": "^4.1",
         "captainhook/captainhook": "^5.25",
         "friendsofphp/php-cs-fixer": "^3.50",
         "mockery/mockery": "^1.6.7",
