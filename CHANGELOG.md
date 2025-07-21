@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Update base-person-bundle: implement extended PersonProviderInterface, implementing getCurrentPersonIdentifier
+- Allow for the configuration of the current user's person identifier using an authorization attribute expression 
+`current_person_identifier_expression`
+- Increase test coverage
+
 ## v0.5.12
 
 - Update core and adapt

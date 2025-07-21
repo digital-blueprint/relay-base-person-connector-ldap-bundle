@@ -10,11 +10,8 @@ use Dbp\Relay\CoreBundle\HealthCheck\CheckResult;
 
 class HealthCheck implements CheckInterface
 {
-    private $ldap;
-
-    public function __construct(LDAPApi $ldap)
+    public function __construct(private readonly LDAPPersonProvider $personProvider)
     {
-        $this->ldap = $ldap;
     }
 
     public function getName(): string
@@ -40,7 +37,7 @@ class HealthCheck implements CheckInterface
     public function check(CheckOptions $options): array
     {
         $results = [];
-        $results[] = $this->checkMethod('Check if all attributes are available', [$this->ldap, 'assertAttributesExist']);
+        $results[] = $this->checkMethod('Check if all attributes are available', [$this->personProvider, 'assertAttributesExist']);
 
         return $results;
     }

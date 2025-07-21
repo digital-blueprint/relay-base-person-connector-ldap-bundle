@@ -14,9 +14,12 @@ class Configuration implements ConfigurationInterface
     public const LDAP_ATTRIBUTE = 'ldap';
     public const LDAP_ATTRIBUTES_ATTRIBUTE = 'attributes';
     public const LDAP_CONNECTION_ATTRIBUTE = 'connection';
+    public const LDAP_CURRENT_PERSON_IDENTIFIER_EXPRESSION_ATTRIBUTE = 'current_person_identifier_expression';
     public const LDAP_IDENTIFIER_ATTRIBUTE_ATTRIBUTE = 'identifier';
     public const LDAP_GIVEN_NAME_ATTRIBUTE_ATTRIBUTE = 'given_name';
     public const LDAP_FAMILY_NAME_ATTRIBUTE_ATTRIBUTE = 'family_name';
+
+    private const LDAP_CURRENT_PERSON_IDENTIFIER_EXPRESSION_ATTRIBUTE_DEFAULT = 'user.getIdentifier()';
 
     public function getConfigTreeBuilder(): TreeBuilder
     {
@@ -31,6 +34,9 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode(self::LDAP_CONNECTION_ATTRIBUTE)
                    ->isRequired()
                    ->cannotBeEmpty()
+                ->end()
+                ->scalarNode(self::LDAP_CURRENT_PERSON_IDENTIFIER_EXPRESSION_ATTRIBUTE)
+                    ->defaultValue(self::LDAP_CURRENT_PERSON_IDENTIFIER_EXPRESSION_ATTRIBUTE_DEFAULT)
                 ->end()
             ->end();
 

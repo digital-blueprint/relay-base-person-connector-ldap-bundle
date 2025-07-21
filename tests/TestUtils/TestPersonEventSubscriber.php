@@ -7,30 +7,55 @@ namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPostEvent;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Event\PersonPreEvent;
+use Dbp\Relay\CoreBundle\LocalData\LocalData;
+use Dbp\Relay\CoreBundle\Rest\Options;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\ConditionNode;
+use Dbp\Relay\CoreBundle\Rest\Query\Filter\Nodes\Node;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class TestPersonEventSubscriber implements EventSubscriberInterface
 {
     private array $options = [];
+    private ?string $alternativePersonIdentifier = null;
 
     public static function getSubscribedEvents(): array
     {
         return [
-            PersonPreEvent::class => 'onPre',
-            PersonPostEvent::class => 'onPost',
+            PersonPreEvent::class => 'onPreEvent',
+            PersonPostEvent::class => 'onPostEvent',
         ];
     }
 
-    public function onPre(PersonPreEvent $event): void
+    public function setAlternativePersonIdentifier(?string $identifier): void
     {
-        $this->options = $event->getOptions();
+        $this->alternativePersonIdentifier = $identifier;
     }
 
-    public function onPost(PersonPostEvent $event): void
+    public function onPreEvent(PersonPreEvent $personPreEvent): void
+    {
+        $this->options = $personPreEvent->getOptions();
+        if ($filter = Options::getFilter($this->options)) {
+            $filter->mapConditionNodes(
+                function (ConditionNode $conditionNode): Node {
+                    if (LocalData::tryGetLocalDataAttributeName($conditionNode->getPath()) === 'test') {
+                        $conditionNode->setPath('ldap_test');
+                    }
+
+                    return $conditionNode;
+                }
+            );
+        }
+        if ($this->alternativePersonIdentifier !== null) {
+            $personPreEvent->setIdentifier($this->alternativePersonIdentifier);
+        }
+    }
+
+    public function onPostEvent(PersonPostEvent $event): void
     {
         $person = $event->getEntity();
-        if ($person instanceof Person) {
-            $person->setLocalDataValue('test', 'my-test-string');
+        assert($person instanceof Person);
+        if ($event->isLocalDataAttributeRequested('test')) {
+            $event->setLocalDataAttribute('test', $event->getSourceData()['ldap_test'][0] ?? null);
         }
     }
 

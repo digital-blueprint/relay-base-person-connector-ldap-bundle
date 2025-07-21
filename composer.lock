@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5491b3c6e31f39473c0a778ce18383b6",
+    "content-hash": "a524e399324de74aeebe2798e6d68ef6",
     "packages": [
         {
             "name": "api-platform/core",
@@ -293,16 +293,16 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.40",
+            "version": "v0.2.41",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-base-person-bundle.git",
-                "reference": "6d11ac75f6d0000e21c3dd05fdee562c17da21af"
+                "reference": "74355b7fd78acc9134f5edce00c6d7c1e41f6da2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/6d11ac75f6d0000e21c3dd05fdee562c17da21af",
-                "reference": "6d11ac75f6d0000e21c3dd05fdee562c17da21af",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/74355b7fd78acc9134f5edce00c6d7c1e41f6da2",
+                "reference": "74355b7fd78acc9134f5edce00c6d7c1e41f6da2",
                 "shasum": ""
             },
             "require": {
@@ -343,9 +343,9 @@
             ],
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-base-person-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.40"
+                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.41"
             },
-            "time": "2025-07-09T10:11:31+00:00"
+            "time": "2025-07-21T07:38:46+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
@@ -460,16 +460,16 @@
         },
         {
             "name": "dbp/relay-core-connector-ldap-bundle",
-            "version": "v0.2.17",
+            "version": "v0.2.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle.git",
-                "reference": "5204f6b6bd4926e17e8d25bb9963f1b50be25fac"
+                "reference": "b6acdbd555304ac62d0762455b9fb009d8e40f3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/5204f6b6bd4926e17e8d25bb9963f1b50be25fac",
-                "reference": "5204f6b6bd4926e17e8d25bb9963f1b50be25fac",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/b6acdbd555304ac62d0762455b9fb009d8e40f3c",
+                "reference": "b6acdbd555304ac62d0762455b9fb009d8e40f3c",
                 "shasum": ""
             },
             "require": {
@@ -516,9 +516,9 @@
             "description": "A template bundle for the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.17"
+                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.18"
             },
-            "time": "2025-07-09T08:52:23+00:00"
+            "time": "2025-07-21T07:58:51+00:00"
         },
         {
             "name": "directorytree/ldaprecord",
@@ -684,21 +684,21 @@
         },
         {
             "name": "doctrine/dbal",
-            "version": "4.2.4",
+            "version": "4.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "b37d160498ea91a2382a2ebe825c4ea6254fc0ec"
+                "reference": "5fe09532be619202d59c70956c6fb20e97933ee3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/b37d160498ea91a2382a2ebe825c4ea6254fc0ec",
-                "reference": "b37d160498ea91a2382a2ebe825c4ea6254fc0ec",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/5fe09532be619202d59c70956c6fb20e97933ee3",
+                "reference": "5fe09532be619202d59c70956c6fb20e97933ee3",
                 "shasum": ""
             },
             "require": {
-                "doctrine/deprecations": "^0.5.3|^1",
-                "php": "^8.1",
+                "doctrine/deprecations": "^1.1.5",
+                "php": "^8.2",
                 "psr/cache": "^1|^2|^3",
                 "psr/log": "^1|^2|^3"
             },
@@ -709,7 +709,7 @@
                 "phpstan/phpstan": "2.1.17",
                 "phpstan/phpstan-phpunit": "2.0.6",
                 "phpstan/phpstan-strict-rules": "^2",
-                "phpunit/phpunit": "10.5.46",
+                "phpunit/phpunit": "11.5.23",
                 "slevomat/coding-standard": "8.16.2",
                 "squizlabs/php_codesniffer": "3.13.1",
                 "symfony/cache": "^6.3.8|^7.0",
@@ -770,7 +770,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/4.2.4"
+                "source": "https://github.com/doctrine/dbal/tree/4.3.0"
             },
             "funding": [
                 {
@@ -786,7 +786,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-15T23:15:01+00:00"
+            "time": "2025-06-16T19:31:04+00:00"
         },
         {
             "name": "doctrine/deprecations",

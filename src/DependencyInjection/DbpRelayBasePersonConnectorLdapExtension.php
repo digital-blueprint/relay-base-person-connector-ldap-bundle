@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection;
 
 use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
-use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi;
+use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -21,7 +21,7 @@ class DbpRelayBasePersonConnectorLdapExtension extends ConfigurableExtension
         );
         $loader->load('services.yaml');
 
-        $definition = $container->getDefinition(LDAPApi::class);
+        $definition = $container->getDefinition(LDAPPersonProvider::class);
         $definition->addMethodCall('setConfig', [$mergedConfig]);
 
         $postEventSubscriber = $container->getDefinition(PersonEventSubscriber::class);

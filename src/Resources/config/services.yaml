@@ -3,15 +3,11 @@ services:
     autowire: true
     autoconfigure: true
 
-  Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPApi:
+  Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider:
     autowire: true
     autoconfigure: true
     calls:
       - setPersonCache: [ '@dbp.relay.base_person_connector_ldap.cache.auth_person' ]
-
-  Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider:
-    autowire: true
-    autoconfigure: true
 
   Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber:
     autowire: true
