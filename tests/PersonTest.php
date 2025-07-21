@@ -7,20 +7,14 @@ namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests;
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection\Configuration;
-use Dbp\Relay\BasePersonConnectorLdapBundle\EventSubscriber\PersonEventSubscriber;
-use Dbp\Relay\BasePersonConnectorLdapBundle\Service\LDAPPersonProvider;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils\TestPersonEventSubscriber;
+use Dbp\Relay\BasePersonConnectorLdapBundle\TestUtils\TestLDAPPersonProvider;
 use Dbp\Relay\CoreBundle\Exception\ApiError;
 use Dbp\Relay\CoreBundle\Rest\Options;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterException;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterTreeBuilder;
 use Dbp\Relay\CoreBundle\Rest\Query\Sort\Sort;
-use Dbp\Relay\CoreBundle\TestUtils\TestAuthorizationService;
-use Dbp\Relay\CoreBundle\TestUtils\TestUserSession;
 use Dbp\Relay\CoreConnectorLdapBundle\TestUtils\TestLdapConnectionProvider;
-use Psr\Log\NullLogger;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Response;
 
 class PersonTest extends ApiTestCase
@@ -31,8 +25,7 @@ class PersonTest extends ApiTestCase
     private const CUSTOM_PERSON_IDENTIFIER = 'custom-person-identifier';
     private const PERSON_IDENTIFIER_USER_ATTRIBUTE = 'PERSON_IDENTIFIER';
 
-    private ?LDAPPersonProvider $personProvider = null;
-    private ?TestLdapConnectionProvider $testLdapConnectionProvider = null;
+    private ?TestLDAPPersonProvider $personProvider = null;
     private ?TestPersonEventSubscriber $testPersonEventSubscriber = null;
 
     protected function setUp(): void
@@ -40,34 +33,20 @@ class PersonTest extends ApiTestCase
         parent::setUp();
 
         $this->testPersonEventSubscriber = new TestPersonEventSubscriber();
-        $localDataEventSubscriber = new PersonEventSubscriber();
-        $localDataEventSubscriber->setConfig(self::createLocalDataMappingConfig());
-
-        $eventDispatcher = new EventDispatcher();
-        $eventDispatcher->addSubscriber($this->testPersonEventSubscriber);
-        $eventDispatcher->addSubscriber($localDataEventSubscriber);
-
-        $this->testLdapConnectionProvider = TestLdapConnectionProvider::create();
-
-        $this->personProvider = new LDAPPersonProvider(
-            new TestUserSession(self::TEST_USER_IDENTIFIER, isAuthenticated: true),
-            $eventDispatcher, $this->testLdapConnectionProvider);
-        $this->personProvider->setConfig($this->getLDAPConfig());
-        $this->personProvider->setLogger(new NullLogger());
-        $this->personProvider->setPersonCache(new ArrayAdapter());
-        TestAuthorizationService::setUp($this->personProvider, self::TEST_USER_IDENTIFIER, [
-            self::PERSON_IDENTIFIER_USER_ATTRIBUTE => self::CUSTOM_PERSON_IDENTIFIER]);
+        $this->personProvider = TestLDAPPersonProvider::createAndSetUp(personEventSubscribers: [
+            $this->testPersonEventSubscriber,
+        ]);
     }
 
     protected function tearDown(): void
     {
-        $this->testLdapConnectionProvider->tearDown();
+        $this->personProvider->tearDown();
     }
 
     public function testGetPersonNotFound()
     {
         try {
-            $this->testLdapConnectionProvider->mockResults(expectCn: '____nope____');
+            $this->personProvider->mockResults(expectCn: '____nope____');
             $this->personProvider->getPerson('____nope____');
             $this->fail('exception not thrown as expected');
         } catch (ApiError $apiError) {
@@ -77,7 +56,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetPerson()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foobar'],
                 'givenName' => ['John'],
@@ -92,7 +71,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonWithCurrentPersonIdentifier()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [self::TEST_USER_IDENTIFIER],
                 'givenName' => ['Test'],
@@ -117,7 +96,7 @@ class PersonTest extends ApiTestCase
      */
     public function testGetPersonWithFilter()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foobar'],
                 'givenName' => ['John'],
@@ -149,7 +128,7 @@ class PersonTest extends ApiTestCase
     {
         $EMAIL = 'john@doe.com';
         $BIRTHDATE = '1994-06-24 00:00:00';
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foobar'],
                 'email' => [$EMAIL],
@@ -170,7 +149,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonWithCustomLocalDataAttribute()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foobar'],
                 'givenName' => ['John'],
@@ -190,7 +169,7 @@ class PersonTest extends ApiTestCase
     public function testGetPersonWithCustomPreEvent()
     {
         $alternativePersonIdentifier = 'foobar';
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [$alternativePersonIdentifier],
                 'givenName' => ['Test'],
@@ -207,7 +186,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetCurrentPerson()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [self::TEST_USER_IDENTIFIER],
                 'givenName' => ['Test'],
@@ -232,7 +211,7 @@ class PersonTest extends ApiTestCase
      */
     public function testGetCurrentPersonWithFilter()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [self::TEST_USER_IDENTIFIER],
                 'givenName' => ['Test'],
@@ -260,7 +239,7 @@ class PersonTest extends ApiTestCase
             Options::getFilter($this->testPersonEventSubscriber->getOptions())->toArray());
 
         // try again with a filter -> the cached person must not be reused!
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [self::TEST_USER_IDENTIFIER],
                 'givenName' => ['Test'],
@@ -281,7 +260,7 @@ class PersonTest extends ApiTestCase
     {
         $EMAIL = 'test@user.com';
         $BIRTHDATE = '1994-06-24 00:00:00';
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [self::TEST_USER_IDENTIFIER],
                 'email' => [$EMAIL],
@@ -311,7 +290,7 @@ class PersonTest extends ApiTestCase
         $this->assertEquals(spl_object_id($person), spl_object_id($samePerson));
 
         // try again with a different set of local data attributes
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [self::TEST_USER_IDENTIFIER],
                 'email' => [$EMAIL],
@@ -332,7 +311,7 @@ class PersonTest extends ApiTestCase
         $this->assertNull($person->getLocalDataValue(self::EMAIL_ATTRIBUTE_NAME));
 
         // try again with a different set of local data attributes and an empty result set -> 404
-        $this->testLdapConnectionProvider->mockResults();
+        $this->personProvider->mockResults();
 
         $options = [];
         try {
@@ -345,7 +324,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetCurrentPersonWithCustomLocalDataAttribute()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [self::TEST_USER_IDENTIFIER],
                 'givenName' => ['Test'],
@@ -365,7 +344,7 @@ class PersonTest extends ApiTestCase
     public function testGetCurrentPersonWithCustomPreEvent()
     {
         $alternativePersonIdentifier = 'foobar';
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => [$alternativePersonIdentifier],
                 'givenName' => ['Test'],
@@ -388,18 +367,21 @@ class PersonTest extends ApiTestCase
 
     public function testGetCurrentPersonIdentifierCustom()
     {
-        $config = $this->getLDAPConfig();
+        $config = TestLDAPPersonProvider::createTestConfig();
         $PERSON_IDENTIFIER_USER_ATTRIBUTE = self::PERSON_IDENTIFIER_USER_ATTRIBUTE;
         $config[Configuration::LDAP_ATTRIBUTE][Configuration::LDAP_CURRENT_PERSON_IDENTIFIER_EXPRESSION_ATTRIBUTE] =
             "user.get('$PERSON_IDENTIFIER_USER_ATTRIBUTE')";
         $this->personProvider->setConfig($config);
+        $this->personProvider->login(userAttributes: [
+            $PERSON_IDENTIFIER_USER_ATTRIBUTE => self::CUSTOM_PERSON_IDENTIFIER,
+        ]);
 
         $this->assertEquals(self::CUSTOM_PERSON_IDENTIFIER, $this->personProvider->getCurrentPersonIdentifier());
     }
 
     public function testGetPersons()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foo'],
                 'givenName' => ['John'],
@@ -441,7 +423,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonsWithSort()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foo'],
                 'givenName' => ['John'],
@@ -482,7 +464,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonsWithTwoSortFields()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foo'],
                 'givenName' => ['John'],
@@ -523,7 +505,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonsWithSortDescending()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foo'],
                 'givenName' => ['John'],
@@ -564,7 +546,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonsWithSortTooManyResultsError()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foo'],
                 'givenName' => ['John'],
@@ -604,7 +586,7 @@ class PersonTest extends ApiTestCase
      */
     public function testGetPersonsWithFilter(): void
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['bar'],
                 'givenName' => ['Joni'],
@@ -630,7 +612,7 @@ class PersonTest extends ApiTestCase
 
     public function testGetPersonsWithLocalData()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foo'],
                 'givenName' => ['John'],
@@ -685,7 +667,7 @@ class PersonTest extends ApiTestCase
      */
     public function testGetPersonsWithFilterWithLocalData()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foo'],
                 'givenName' => ['John'],
@@ -745,7 +727,7 @@ class PersonTest extends ApiTestCase
      */
     public function testGetPersonsWithFilterWithCustomLocalDataAttribute()
     {
-        $this->testLdapConnectionProvider->mockResults([
+        $this->personProvider->mockResults([
             [
                 'cn' => ['foobar'],
                 'givenName' => ['John'],

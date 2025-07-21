@@ -90,6 +90,14 @@ class LDAPPersonProvider extends AbstractAuthorizationService implements PersonP
     }
 
     /**
+     * @internal For testing purposes
+     */
+    public function getLdapConnectionProvider(): LdapConnectionProvider
+    {
+        return $this->ldapConnectionProvider;
+    }
+
+    /**
      * @param array $options Available options:
      *
      * @see Person::SEARCH_PARAMETER_NAME (whitespace separated list of search terms to perform a partial case-insensitive text search on person's full name)

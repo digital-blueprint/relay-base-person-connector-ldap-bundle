@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add TestUtils/TestLDAPPersonProvider for testing in other bundles
+
 ## v0.5.13
 
 - Update base-person-bundle: implement extended PersonProviderInterface, implementing getCurrentPersonIdentifier
