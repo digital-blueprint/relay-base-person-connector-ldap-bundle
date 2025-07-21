@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.5.14
+
 - Add TestUtils/TestLDAPPersonProvider for testing in other bundles
 
 ## v0.5.13
