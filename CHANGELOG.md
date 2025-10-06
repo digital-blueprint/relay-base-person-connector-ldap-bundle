@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.5.15
+
 - Update base-person and adapt tests
 
 ## v0.5.14
