@@ -58,6 +58,14 @@ class Kernel extends BaseKernel
             'secret' => '',
         ]);
 
+        $container->extension('dbp_relay_base_person', [
+            'authorization' => [
+                'roles' => [
+                    'ROLE_READER' => 'true', // generally allow read access for tests
+                ],
+            ],
+        ]);
+
         $container->extension('dbp_relay_base_person_connector_ldap', [
             Configuration::LDAP_ATTRIBUTE => [
                 Configuration::LDAP_CONNECTION_ATTRIBUTE => TestLdapConnectionProvider::DEFAULT_CONNECTION_IDENTIFIER,

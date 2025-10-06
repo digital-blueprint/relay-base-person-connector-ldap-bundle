@@ -5,7 +5,7 @@
     "require": {
         "php": ">=8.2",
         "ext-json": "*",
-        "dbp/relay-base-person-bundle": "^0.2.41",
+        "dbp/relay-base-person-bundle": "^0.2.42",
         "dbp/relay-core-bundle": "^0.1.217",
         "dbp/relay-core-connector-ldap-bundle": "^0.2.18",
         "psr/container": "^1.1 || ^2",
