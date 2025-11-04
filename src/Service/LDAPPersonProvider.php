@@ -147,7 +147,9 @@ class LDAPPersonProvider extends AbstractAuthorizationService implements PersonP
                 }
                 $targetSortFields[] = Sort::createSortField($targetSortAttributePath, Sort::getDirection($sortField));
             }
-            Options::setSort($ldapOptions, new Sort($targetSortFields));
+            if ([] !== $targetSortFields) {
+                Options::setSort($ldapOptions, new Sort($targetSortFields));
+            }
 
             return $this->getPersonCollection($currentPageNumber, $maxNumItemsPerPage, $ldapOptions);
         } catch (FilterException $filterException) {
