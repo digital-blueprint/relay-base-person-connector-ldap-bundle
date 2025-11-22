@@ -298,20 +298,21 @@
         },
         {
             "name": "dbp/relay-base-person-bundle",
-            "version": "v0.2.42",
+            "version": "v0.2.43",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-base-person-bundle.git",
-                "reference": "d846d5b258f3b144107f7296eefc172639613290"
+                "reference": "f72e94857415ae495ed4aa46070f22b688d21212"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/d846d5b258f3b144107f7296eefc172639613290",
-                "reference": "d846d5b258f3b144107f7296eefc172639613290",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-base-person-bundle/zipball/f72e94857415ae495ed4aa46070f22b688d21212",
+                "reference": "f72e94857415ae495ed4aa46070f22b688d21212",
                 "shasum": ""
             },
             "require": {
-                "api-platform/core": "^4.1",
+                "api-platform/metadata": "^4.1",
+                "api-platform/openapi": "^4.1",
                 "dbp/relay-core-bundle": "^0.1.220",
                 "ext-json": "*",
                 "php": ">=8.2",
@@ -323,18 +324,20 @@
                 "symfony/serializer": "^6.4"
             },
             "require-dev": {
+                "api-platform/symfony": "^4.1",
                 "captainhook/captainhook": "^5.25",
                 "friendsofphp/php-cs-fixer": "^3.50",
                 "phpstan/phpstan": "^2.0.0",
                 "phpstan/phpstan-phpunit": "^2.0.0",
                 "phpstan/phpstan-symfony": "^2.0.0",
-                "phpunit/phpunit": "^10.1",
+                "phpunit/phpunit": "^11.5",
                 "symfony/browser-kit": "^6.4",
                 "symfony/error-handler": "^6.4",
                 "symfony/http-client": "^6.4",
                 "symfony/monolog-bridge": "^6.4",
                 "symfony/monolog-bundle": "^3.10",
-                "symfony/phpunit-bridge": "^7.0.4"
+                "symfony/phpunit-bridge": "^7.0.4",
+                "symfony/runtime": "*"
             },
             "type": "symfony-bundle",
             "autoload": {
@@ -348,9 +351,9 @@
             ],
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-base-person-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.42"
+                "source": "https://github.com/digital-blueprint/relay-base-person-bundle/tree/v0.2.43"
             },
-            "time": "2025-10-02T08:42:58+00:00"
+            "time": "2025-11-18T13:35:15+00:00"
         },
         {
             "name": "dbp/relay-core-bundle",
