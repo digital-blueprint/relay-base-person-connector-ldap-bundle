@@ -52,8 +52,6 @@ class PersonFromUserItemSubscriber implements EventSubscriberInterface
 }
 ```
 
-You can find the full example at [PersonFromUserItemSubscriber.php](https://gitlab.tugraz.at/dbp/relay/examples/relay-checkin-api/-/blob/main/src/EventSubscriber/PersonFromUserItemSubscriber.php).
-
 Afterwards best do a `composer install` to make sure caches are cleared and everything is in order.
 
 ### Greenlight
@@ -98,8 +96,6 @@ class PersonFromUserItemSubscriber implements EventSubscriberInterface
     }
 }
 ```
-
-You can find the full example at [PersonFromUserItemSubscriber.php](https://gitlab.tugraz.at/dbp/relay/examples/relay-greenlight-api/-/blob/main/src/EventSubscriber/PersonFromUserItemSubscriber.php).
 
 Afterwards best do a `composer install` to make sure caches are cleared and everything is in order.
 
@@ -147,7 +143,5 @@ class PersonFromUserItemSubscriber implements EventSubscriberInterface
     }
 }
 ```
-
-You can find the full example at [PersonFromUserItemSubscriber.php](https://gitlab.tugraz.at/dbp/relay/examples/relay-esign-api/-/blob/main/src/EventSubscriber/PersonFromUserItemSubscriber.php).
 
 Afterwards best do a `composer install` to make sure caches are cleared and everything is in order.
