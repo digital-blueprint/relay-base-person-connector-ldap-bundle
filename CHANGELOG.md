@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.5.16
+
+- Add support for Symfony 7.4
+
 ## v0.5.15
 
 - Update base-person and adapt tests
