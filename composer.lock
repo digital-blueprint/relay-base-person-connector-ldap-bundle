@@ -1219,21 +1219,21 @@
         },
         {
             "name": "dbp/relay-core-connector-ldap-bundle",
-            "version": "v0.2.20",
+            "version": "v0.2.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle.git",
-                "reference": "2852c17b055227d2ea628244b3a43d0b60b1ef89"
+                "reference": "d6f123b516996ab8ff3e2454566ccca3cccd2146"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/2852c17b055227d2ea628244b3a43d0b60b1ef89",
-                "reference": "2852c17b055227d2ea628244b3a43d0b60b1ef89",
+                "url": "https://api.github.com/repos/digital-blueprint/relay-core-connector-ldap-bundle/zipball/d6f123b516996ab8ff3e2454566ccca3cccd2146",
+                "reference": "d6f123b516996ab8ff3e2454566ccca3cccd2146",
                 "shasum": ""
             },
             "require": {
                 "dbp/relay-core-bundle": "^0.1.216",
-                "directorytree/ldaprecord": "^3.7.6",
+                "directorytree/ldaprecord": "^4.0.2",
                 "ext-json": "*",
                 "php": ">=8.2",
                 "psr/cache": "^2.0 || ^3.0",
@@ -1259,7 +1259,7 @@
                 "phpunit/phpunit": "^11.5",
                 "symfony/browser-kit": "^6.4 || ^7.4",
                 "symfony/http-client": "^6.4 || ^7.4",
-                "symfony/monolog-bundle": "^3.10",
+                "symfony/monolog-bundle": "^4.0",
                 "symfony/phpunit-bridge": "^7.0.4",
                 "symfony/runtime": "^7.4"
             },
@@ -1276,22 +1276,22 @@
             "description": "A template bundle for the Relay API gateway",
             "support": {
                 "issues": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/issues",
-                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.20"
+                "source": "https://github.com/digital-blueprint/relay-core-connector-ldap-bundle/tree/v0.2.21"
             },
-            "time": "2025-12-09T10:57:23+00:00"
+            "time": "2026-01-07T13:13:47+00:00"
         },
         {
             "name": "directorytree/ldaprecord",
-            "version": "v3.8.5",
+            "version": "v4.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DirectoryTree/LdapRecord.git",
-                "reference": "00e5f088f8c4028d5f398783cccc2e8119a27a65"
+                "reference": "fa70e335cf94ef96aecfafe05c2144a2d3bc3b04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DirectoryTree/LdapRecord/zipball/00e5f088f8c4028d5f398783cccc2e8119a27a65",
-                "reference": "00e5f088f8c4028d5f398783cccc2e8119a27a65",
+                "url": "https://api.github.com/repos/DirectoryTree/LdapRecord/zipball/fa70e335cf94ef96aecfafe05c2144a2d3bc3b04",
+                "reference": "fa70e335cf94ef96aecfafe05c2144a2d3bc3b04",
                 "shasum": ""
             },
             "require": {
@@ -1354,7 +1354,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-06T02:22:34+00:00"
+            "time": "2025-12-29T20:31:24+00:00"
         },
         {
             "name": "doctrine/collections",
