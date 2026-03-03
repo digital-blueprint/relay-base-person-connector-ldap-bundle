@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.5.17
+
 - Update core and core-connector-ldap and adapt to new sort implementation
 
 ## v0.5.16
