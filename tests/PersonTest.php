@@ -14,6 +14,7 @@ use Dbp\Relay\CoreBundle\Rest\Options;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterException;
 use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterTreeBuilder;
 use Dbp\Relay\CoreBundle\Rest\Query\Sort\Sort;
+use Dbp\Relay\CoreBundle\Rest\Query\Sort\SortField;
 use Dbp\Relay\CoreConnectorLdapBundle\TestUtils\TestLdapConnectionProvider;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -525,7 +526,7 @@ class PersonTest extends ApiTestCase
             return $query === '('.TestLdapConnectionProvider::getObjectClassCriteria().')';
         });
 
-        $sort = new Sort([Sort::createSortField('familyName', Sort::DESCENDING_DIRECTION)]);
+        $sort = new Sort([Sort::createSortField('familyName', SortField::DESCENDING_DIRECTION)]);
         $options = [];
         Options::setSort($options, $sort);
         $persons = $this->personProvider->getPersons(1, 3, $options);
@@ -570,7 +571,7 @@ class PersonTest extends ApiTestCase
         ]);
 
         // Note: config of test ldap connection has a limit of 3 results that it will sort -> should refuse
-        $sort = new Sort([Sort::createSortField('familyName', Sort::DESCENDING_DIRECTION)]);
+        $sort = new Sort([Sort::createSortField('familyName', SortField::DESCENDING_DIRECTION)]);
         $options = [];
         Options::setSort($options, $sort);
         try {

@@ -141,11 +141,11 @@ class LDAPPersonProvider extends AbstractAuthorizationService implements PersonP
 
             $targetSortFields = [];
             foreach (Options::getSort($options)?->getSortFields() ?? [] as $sortField) {
-                $targetSortAttributePath = $this->attributeMapper->getTargetAttributePath(Sort::getPath($sortField));
+                $targetSortAttributePath = $this->attributeMapper->getTargetAttributePath($sortField->getPath());
                 if ($targetSortAttributePath === null) {
-                    throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'undefined person attribute to sort by: '.Sort::getPath($sortField));
+                    throw ApiError::withDetails(Response::HTTP_BAD_REQUEST, 'undefined person attribute to sort by: '.$sortField->getPath());
                 }
-                $targetSortFields[] = Sort::createSortField($targetSortAttributePath, Sort::getDirection($sortField));
+                $targetSortFields[] = Sort::createSortField($targetSortAttributePath, $sortField->getDirection());
             }
             if ([] !== $targetSortFields) {
                 Options::setSort($ldapOptions, new Sort($targetSortFields));

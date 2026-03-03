@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update core and core-connector-ldap and adapt to new sort implementation
+
 ## v0.5.16
 
 - Add support for Symfony 7.4

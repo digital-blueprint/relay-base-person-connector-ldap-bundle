@@ -31,7 +31,7 @@ class ApiTest extends AbstractApiTest
         ]);
         $response = $this->testClient->get('/base/people/jane_doe');
         if ($response->getStatusCode() !== 200) {
-            dump($response->getContent(false));
+            dump(json_decode($response->getContent(false), true));
         }
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
         $personArray = json_decode($response->getContent(false), true);
@@ -63,7 +63,7 @@ class ApiTest extends AbstractApiTest
         ]);
         $response = $this->testClient->get('/base/people');
         if ($response->getStatusCode() !== 200) {
-            dump($response->getContent(false));
+            dump(json_decode($response->getContent(false), true));
         }
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
         $personsArray = json_decode($response->getContent(false), true)['hydra:member'];
