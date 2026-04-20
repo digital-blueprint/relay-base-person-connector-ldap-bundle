@@ -767,11 +767,13 @@ class PersonTest extends ApiTestCase
             [
                 'local_data_attribute' => self::EMAIL_ATTRIBUTE_NAME,
                 'source_attribute' => self::EMAIL_ATTRIBUTE_NAME,
+                'is_array' => false,
                 'default_value' => '',
             ],
             [
                 'local_data_attribute' => self::BIRTHDATE_ATTRIBUTE_NAME,
                 'source_attribute' => 'dateofbirth',
+                'is_array' => false,
                 'default_value' => '',
             ],
         ];
