@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests;
 
-use Dbp\Relay\CoreBundle\TestUtils\AbstractApiTest;
+use Dbp\Relay\CoreBundle\TestUtils\ApiTestCase;
 use Dbp\Relay\CoreConnectorLdapBundle\TestUtils\TestLdapConnectionProvider;
 use Symfony\Component\HttpFoundation\Response;
 
-class ApiTest extends AbstractApiTest
+class ApiTest extends ApiTestCase
 {
     private ?TestLdapConnectionProvider $testLdapConnectionProvider = null;
 
     protected function setUp(): void
     {
-        parent::setUp();
+        $this->createTestClient();
+        $this->login();
 
         $this->testLdapConnectionProvider = TestLdapConnectionProvider::create();
-        $this->testLdapConnectionProvider->useInApiTest($this->testClient->getContainer());
+        $this->testLdapConnectionProvider->useInApiTest($this->getContainer());
     }
 
     public function testGetPerson()

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Dbp\Relay\BasePersonConnectorLdapBundle\Tests;
 
-use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use Dbp\Relay\BasePersonBundle\Entity\Person;
 use Dbp\Relay\BasePersonConnectorLdapBundle\DependencyInjection\Configuration;
 use Dbp\Relay\BasePersonConnectorLdapBundle\Tests\TestUtils\TestPersonEventSubscriber;
@@ -16,9 +15,10 @@ use Dbp\Relay\CoreBundle\Rest\Query\Filter\FilterTreeBuilder;
 use Dbp\Relay\CoreBundle\Rest\Query\Sort\Sort;
 use Dbp\Relay\CoreBundle\Rest\Query\Sort\SortField;
 use Dbp\Relay\CoreConnectorLdapBundle\TestUtils\TestLdapConnectionProvider;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-class PersonTest extends ApiTestCase
+class PersonTest extends KernelTestCase
 {
     private const EMAIL_ATTRIBUTE_NAME = 'email';
     private const BIRTHDATE_ATTRIBUTE_NAME = 'birthDate';
